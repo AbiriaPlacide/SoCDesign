@@ -1,0 +1,2 @@
+module DigitalLockController(X, Enter,Reset_Lock, Open, State);
+input X, Enter, Reset_Lock

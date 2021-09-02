@@ -1,0 +1,105 @@
+m255
+K4
+z2
+!s11f vlog 2020.1 2020.02, Feb 28 2020
+13
+!s112 1.1
+!i10d 8192
+!i10e 25
+!i10f 100
+cModel Technology
+Z0 d/home/abiria/SoCDesign_Class/Lab1DigitalLock/simulation/qsim
+vDigitalLockController
+Z1 !s110 1630568230
+!i10b 1
+!s100 3E8Q9Z30kEe_[?HK]jYNU2
+Z2 !s11b Dg1SIo80bB@j0V0VzS_@n1
+IQ1m22=Ud>@U2>[WZnMMMG1
+Z3 VDg1SIo80bB@j0V0VzS_@n1
+R0
+w1630568229
+Z4 8DigitalLockController.vo
+Z5 FDigitalLockController.vo
+!i122 70
+L0 32 599
+Z6 OV;L;2020.1;71
+r1
+!s85 0
+31
+Z7 !s108 1630568230.000000
+Z8 !s107 DigitalLockController.vo|
+Z9 !s90 -work|work|DigitalLockController.vo|
+!i113 1
+Z10 o-work work
+Z11 tCvgOpt 0
+n@digital@lock@controller
+vDigitalLockController_vlg_vec_tst
+R1
+!i10b 1
+!s100 :n@3VI<;ffHAA0lAlcYXI0
+R2
+ITAO0jhnVo@hH9Vh:fHj`Q3
+R3
+R0
+w1630568228
+Z12 8Waveform.vwf.vt
+Z13 FWaveform.vwf.vt
+!i122 71
+L0 30 100
+R6
+r1
+!s85 0
+31
+R7
+Z14 !s107 Waveform.vwf.vt|
+Z15 !s90 -work|work|Waveform.vwf.vt|
+!i113 1
+R10
+R11
+n@digital@lock@controller_vlg_vec_tst
+vhexoutput
+Z16 !s110 1630561303
+!i10b 1
+!s100 J1UXa;o4?iGF_9ZbK>Xh13
+R2
+IDV>fi9cmme9^mc7>ijl8a1
+R3
+R0
+w1630561303
+R4
+R5
+!i122 56
+L0 32 300
+R6
+r1
+!s85 0
+31
+Z17 !s108 1630561303.000000
+R8
+R9
+!i113 1
+R10
+R11
+vhexoutput_vlg_vec_tst
+R16
+!i10b 1
+!s100 <ZDVdSGSCQi9DcAcK]11E2
+R2
+IaU04X2@VZZ@D;HC56f<8I0
+R3
+R0
+w1630561301
+R12
+R13
+!i122 57
+L0 30 52
+R6
+r1
+!s85 0
+31
+R17
+R14
+R15
+!i113 1
+R10
+R11

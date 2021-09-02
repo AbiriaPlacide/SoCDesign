@@ -1,0 +1,49 @@
+|DigitalLockController
+X => Mux2.IN4
+X => Mux1.IN4
+X => Mux1.IN5
+X => Mux2.IN5
+X => Mux0.IN5
+X => Mux2.IN6
+X => Mux0.IN6
+X => Mux1.IN6
+X => Mux0.IN7
+X => Mux1.IN7
+X => Mux2.IN7
+X => Mux0.IN4
+Enter => State[0]~reg0.CLK
+Enter => State[1]~reg0.CLK
+Enter => State[2]~reg0.CLK
+Enter => State[3]~reg0.CLK
+Reset_Lock => State.OUTPUTSELECT
+Reset_Lock => State.OUTPUTSELECT
+Reset_Lock => State.OUTPUTSELECT
+Reset_Lock => State.OUTPUTSELECT
+Open <= Decoder0.DB_MAX_OUTPUT_PORT_TYPE
+State[0] <= State[0].DB_MAX_OUTPUT_PORT_TYPE
+State[1] <= State[1].DB_MAX_OUTPUT_PORT_TYPE
+State[2] <= State[2].DB_MAX_OUTPUT_PORT_TYPE
+State[3] <= State[3].DB_MAX_OUTPUT_PORT_TYPE
+HEXout[6] <= binary2seven:comb_39.SEV
+HEXout[5] <= binary2seven:comb_39.SEV
+HEXout[4] <= binary2seven:comb_39.SEV
+HEXout[3] <= binary2seven:comb_39.SEV
+HEXout[2] <= binary2seven:comb_39.SEV
+HEXout[1] <= binary2seven:comb_39.SEV
+HEXout[0] <= binary2seven:comb_39.SEV
+
+
+|DigitalLockController|binary2seven:comb_39
+BIN[0] => Decoder0.IN3
+BIN[1] => Decoder0.IN2
+BIN[2] => Decoder0.IN1
+BIN[3] => Decoder0.IN0
+SEV[6] <= WideOr6.DB_MAX_OUTPUT_PORT_TYPE
+SEV[5] <= WideOr5.DB_MAX_OUTPUT_PORT_TYPE
+SEV[4] <= WideOr4.DB_MAX_OUTPUT_PORT_TYPE
+SEV[3] <= WideOr3.DB_MAX_OUTPUT_PORT_TYPE
+SEV[2] <= WideOr2.DB_MAX_OUTPUT_PORT_TYPE
+SEV[1] <= WideOr1.DB_MAX_OUTPUT_PORT_TYPE
+SEV[0] <= WideOr0.DB_MAX_OUTPUT_PORT_TYPE
+
+
