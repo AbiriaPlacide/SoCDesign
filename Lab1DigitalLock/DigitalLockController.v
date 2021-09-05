@@ -45,7 +45,7 @@ output reg Open = 0;
 output reg [WIDTH-1:0] State; //keeps track of current state
 reg        [WIDTH-1:0] nextState;
 
-localparam STATE0 = 4'd0,
+localparam 	  STATE0 = 4'd0,
               STATE1 = 4'd1,
               STATE2 = 4'd2,
               STATE3 = 4'd3,
@@ -65,49 +65,56 @@ end //end of always block
 always@( * )
 begin
     nextState = State; //make next state to current state if it has not been assigned
-    Open = 0; //default at zero
     
     case(State)
         STATE0: begin 
 						if(X) nextState = STATE1;
-						else nextState = STATE0; //reapeat for every state
+						else nextState = STATE8; //reapeat for every state
 					 end //1
 		  
         STATE1: begin 
 						if(X) nextState = STATE2;
-				   	else nextState = STATE0; //reapeat for every state
+				   	else nextState = STATE8; //reapeat for every state
 					 end //1
 						
         STATE2: begin 
 						if(X)  begin nextState = STATE3; end
-						else nextState = STATE0; //reapeat for every state
+						else nextState = STATE8; //reapeat for every state
 					 end //1
         STATE3: begin 
 					   if(~X) nextState = STATE4; 
-				      else nextState = STATE0; //reapeat for every state
+				      else nextState = STATE8; //reapeat for every state
 					 end //0
         STATE4: begin 
 						if(X)  nextState = STATE5; 
-						else nextState = STATE0; //reapeat for every state
+						else nextState = STATE8; //reapeat for every state
 					 end //1
         STATE5: begin 
 						if(X)  nextState = STATE6; 
-						else nextState = STATE0; //reapeat for every state
+						else nextState = STATE8; //reapeat for every state
 					 end //1
         STATE6: begin 
 						 if(X)  nextState = STATE7; 
-						 else nextState = STATE0; //reapeat for every state
+						 else nextState = STATE8; //reapeat for every state
 					 end //1
         STATE7: begin
-                    Open = 1;
-                    //if(Reset_Lock == 0) begin Open = 0; nextState = STATE0; end  //first press, lock
                     nextState = STATE7;
                   end  
+		  STATE8: begin 
+					   nextState = STATE8;
+					 end
     endcase
 end //end of always block
 
-//hex display instantiation
+always @( * )
+begin
+	case (State)
+		STATE0, STATE1, STATE2, STATE3, STATE4, STATE5, STATE6 : Open = 0;
+		STATE7: Open = 1;
+	endcase
+end
 
+//hex0 display instantiation
 binary2seven(.BIN(State), .SEV(HEXout));
 
 endmodule

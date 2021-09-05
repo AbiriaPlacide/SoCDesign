@@ -1,0 +1,9 @@
+Cyclone V FPGA Architecture
+---------------------------
+
+LUTS(Look up tables)
+
+CLB
+
+LUT + flip flop
+	can be used as a sequencial or combinational logic machine
