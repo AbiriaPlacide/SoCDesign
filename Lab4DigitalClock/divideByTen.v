@@ -1,4 +1,4 @@
-module divideByTen #(parameter N=10, parameter M=4)
+module divideByTen #(parameter N=10, parameter M=8)
 (
 input CLK, CLEAR,
 output reg [M-1:0] COUNT,
