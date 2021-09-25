@@ -5,6 +5,8 @@ output reg [M-1:0] COUNT,
 // COUNT is defined as a M-bit register
 output reg OUT
 );
+
+
 always @ (negedge CLK, negedge CLEAR)
 	if (CLEAR==1'b0) COUNT <= 0;
 	// COUNT is loaded with all 0's
