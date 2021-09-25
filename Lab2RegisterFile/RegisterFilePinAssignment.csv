@@ -1,0 +1,46 @@
+# Copyright (C) 2020  Intel Corporation. All rights reserved.
+# Your use of Intel Corporation's design tools, logic functions 
+# and other software and tools, and any partner logic 
+# functions, and any output files from any of the foregoing 
+# (including device programming or simulation files), and any 
+# associated documentation or information are expressly subject 
+# to the terms and conditions of the Intel Program License 
+# Subscription Agreement, the Intel Quartus Prime License Agreement,
+# the Intel FPGA IP License Agreement, or other applicable license
+# agreement, including, without limitation, that your use is for
+# the sole purpose of programming logic devices manufactured by
+# Intel and sold by Intel or its authorized distributors.  Please
+# refer to the applicable agreement for further details, at
+# https://fpgasoftware.intel.com/eula.
+
+# Quartus Prime Version 20.1.1 Build 720 11/11/2020 SJ Lite Edition
+# File: /home/abiria/SoCDesign_Class/Lab2RegisterFile/RegisterFilePinAssignment.csv
+# Generated on: Mon Sep 13 22:29:56 2021
+
+# Note: The column header names should not be changed if you wish to import this .csv file into the Quartus Prime software.
+
+To,Direction,Location,I/O Bank,VREF Group,I/O Standard,Reserved,Current Strength,Slew Rate,Differential Pair,Transceiver Analog Settings Protocol,VCCR_GXB/VCCT_GXB Voltage,Transceiver I/O Pin Termination,Transceiver Dedicated Refclk Pin Termination,Transmitter Common Mode Driver Voltage,Transmitter Slew Rate Control,Transmitter Differential Output Voltage,Receiver Buffer Common Mode Voltage,Strict Preservation
+CLK,Input,PIN_AA15,3B,B3B_N0,,,,,,,,,,,,,,
+Din[3],Input,PIN_AF10,3A,B3A_N0,,,,,,,,,,,,,,
+Din[2],Input,PIN_AF9,3A,B3A_N0,,,,,,,,,,,,,,
+Din[1],Input,PIN_AC12,3A,B3A_N0,,,,,,,,,,,,,,
+Din[0],Input,PIN_AB12,3A,B3A_N0,,,,,,,,,,,,,,
+Dout[3],Output,PIN_V18,4A,B4A_N0,,,,,,,,,,,,,,
+Dout[2],Output,PIN_V17,4A,B4A_N0,,,,,,,,,,,,,,
+Dout[1],Output,PIN_W16,4A,B4A_N0,,,,,,,,,,,,,,
+Dout[0],Output,PIN_V16,4A,B4A_N0,,,,,,,,,,,,,,
+Hex0[0],Output,PIN_AE26,5A,B5A_N0,,,,,,,,,,,,,,
+Hex0[1],Output,PIN_AE27,5A,B5A_N0,,,,,,,,,,,,,,
+Hex0[2],Output,PIN_AE28,5A,B5A_N0,,,,,,,,,,,,,,
+Hex0[3],Output,PIN_AG27,5A,B5A_N0,,,,,,,,,,,,,,
+Hex0[4],Output,PIN_AF28,5A,B5A_N0,,,,,,,,,,,,,,
+Hex0[5],Output,PIN_AG28,5A,B5A_N0,,,,,,,,,,,,,,
+Hex0[6],Output,PIN_AH28,5A,B5A_N0,,,,,,,,,,,,,,
+RA[2],Input,PIN_AE12,3A,B3A_N0,,,,,,,,,,,,,,
+RA[1],Input,PIN_AD10,3A,B3A_N0,,,,,,,,,,,,,,
+RA[0],Input,PIN_AC9,3A,B3A_N0,,,,,,,,,,,,,,
+RST,Input,PIN_AA14,3B,B3B_N0,,,,,,,,,,,,,,
+WA[2],Input,PIN_AE11,3A,B3A_N0,,,,,,,,,,,,,,
+WA[1],Input,PIN_AD12,3A,B3A_N0,,,,,,,,,,,,,,
+WA[0],Input,PIN_AD11,3A,B3A_N0,,,,,,,,,,,,,,
+WR_ENABLE,Input,PIN_Y16,3B,B3B_N0,,,,,,,,,,,,,,

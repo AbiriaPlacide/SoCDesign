@@ -1,0 +1,9 @@
+top-module: register file
+	3-8 decoder : will be used to select which register (done?)
+	8-1 multiplexer:  will be used to output data. (done)
+	4-bit reg (with enable): holds data (done)
+
+all thats left is testing and integrating
+
+-------------side note-----------------
+d_flipflop ff[7:0] (A, Q, reset clk); // this is for instantiating an array of instances.

@@ -1,0 +1,59 @@
+m255
+K4
+z2
+!s11f vlog 2020.1 2020.02, Feb 28 2020
+13
+!s112 1.1
+!i10d 8192
+!i10e 25
+!i10f 100
+cModel Technology
+Z0 d/home/abiria/SoCDesign_Class/Lab2RegisterFile/Lib/8to1mux
+vEightxOneMux
+Z1 !s110 1631327128
+!i10b 1
+!s100 eKLKdZ[CFm_i6oX43@@7l1
+Z2 !s11b Dg1SIo80bB@j0V0VzS_@n1
+IRPCKmA2aK7@hIPC`^dDC^0
+Z3 VDg1SIo80bB@j0V0VzS_@n1
+R0
+w1631327078
+8/home/abiria/SoCDesign_Class/Lab2RegisterFile/Lib/8to1mux/EightxOneMux.v
+F/home/abiria/SoCDesign_Class/Lab2RegisterFile/Lib/8to1mux/EightxOneMux.v
+!i122 3
+L0 1 24
+Z4 OV;L;2020.1;71
+r1
+!s85 0
+31
+Z5 !s108 1631327128.000000
+!s107 /home/abiria/SoCDesign_Class/Lab2RegisterFile/Lib/8to1mux/EightxOneMux.v|
+!s90 -reportprogress|300|-work|work|/home/abiria/SoCDesign_Class/Lab2RegisterFile/Lib/8to1mux/EightxOneMux.v|
+!i113 1
+Z6 o-work work
+Z7 tCvgOpt 0
+n@eightx@one@mux
+vtb_EightxOneMux
+R1
+!i10b 1
+!s100 9j9ZRBM3?65H@=e4XmGc<0
+R2
+IgR9jOgBVXDOZ>iQgD;dd72
+R3
+R0
+w1631326833
+8/home/abiria/SoCDesign_Class/Lab2RegisterFile/Lib/8to1mux/tb_EightxOneMux.v
+F/home/abiria/SoCDesign_Class/Lab2RegisterFile/Lib/8to1mux/tb_EightxOneMux.v
+!i122 4
+L0 3 43
+R4
+r1
+!s85 0
+31
+R5
+!s107 /home/abiria/SoCDesign_Class/Lab2RegisterFile/Lib/8to1mux/tb_EightxOneMux.v|
+!s90 -reportprogress|300|-work|work|/home/abiria/SoCDesign_Class/Lab2RegisterFile/Lib/8to1mux/tb_EightxOneMux.v|
+!i113 1
+R6
+R7
+ntb_@eightx@one@mux
