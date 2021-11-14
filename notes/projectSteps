@@ -1,0 +1,15 @@
+step 0: platform designer
+step 1: control register
+step 2: BRD register
+Step 3: baud rate output > test bit
+Step 4: Status register read
+Step 5: Handle W1C & overflows
+		Same fifo should be used for transmitting and receiving
+		if(xFifo full and write) set fifo overflow
+		W1C -> status reg -> clear fifo overflow
+		how would you write that code:
+		define a block that defined the fifo bits
+			if  address and chip selected and write and bit 0 set,
+				reset fifo?
+Step 6: FIFO
+	Tx Fifo connected to Rx input
