@@ -958,4 +958,5 @@ set_global_assignment -name VERILOG_FILE top.v
 set_global_assignment -name VERILOG_FILE baudratedivider.v
 set_global_assignment -name VERILOG_FILE spi_module.v
 set_global_assignment -name VERILOG_FILE FIFO.v
+set_global_assignment -name VERILOG_FILE binary2seven.v
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

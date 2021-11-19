@@ -140,9 +140,9 @@ module top
     inout  [35:0]  GPIO_1,
 
     // 7-segment displays 
-    output  [6:0]  HEX0,
-    output  [6:0]  HEX1,
-    output  [6:0]  HEX2,
+    output  [0:6]  HEX0,
+    output  [0:6]  HEX1,
+    output  [0:6]  HEX2,
     output  [6:0]  HEX3,
     output  [6:0]  HEX4,
     output  [6:0]  HEX5,
@@ -222,9 +222,9 @@ module top
     assign GPIO_0 = 36'bzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz;
     assign GPIO_1[35:32] = 4'bzzzz;
 
-    assign HEX0 = 7'b1111111;
-    assign HEX1 = 7'b1111111;
-    assign HEX2 = 7'b1111111;
+    //assign HEX0 = 7'b1111111;
+    //assign HEX1 = 7'b1111111;
+    //assign HEX2 = 7'b1111111;
     assign HEX3 = 7'b1111111;
     assign HEX4 = 7'b1111111;
     assign HEX5 = 7'b1000010; // G
@@ -259,6 +259,9 @@ module top
 		  .port_spi_cs1								  (GPIO_0[15]),
 		  .port_spi_cs2								  (GPIO_0[17]),
 		  .port_spi_cs3								  (GPIO_0[19]),
+		  .HEX0											  (HEX0),
+		  .HEX1											  (HEX1),
+		  .HEX2											  (HEX2),
         .memory_mem_a                          (HPS_DDR3_ADDR),
         .memory_mem_ba                         (HPS_DDR3_BA),
         .memory_mem_ck                         (HPS_DDR3_CK_P),

@@ -89,7 +89,10 @@ module soc_system (
 		input  wire        port_spi_rx,                           //                          .spi_rx
 		output wire        port_spi_tx,                           //                          .spi_tx
 		output wire        port_spi_clk,                          //                          .spi_clk
-		input  wire        reset_reset_n                          //                     reset.reset_n
+		input  wire        reset_reset_n,                          //                     reset.reset_n
+		output wire [0:6]  HEX0, //read ptr
+		output wire [0:6]  HEX1, //write ptr
+		output wire [0:6]  HEX2  //status bits
 	);
 
 	wire   [1:0] hps_0_h2f_axi_master_awburst;                              // hps_0:h2f_AWBURST -> mm_interconnect_0:hps_0_h2f_axi_master_awburst
@@ -540,7 +543,10 @@ module soc_system (
 		.spi_cs3    (port_spi_cs3),                                           //             .spi_cs3
 		.spi_rx     (port_spi_rx),                                            //             .spi_rx
 		.spi_tx     (port_spi_tx),                                            //             .spi_tx
-		.spi_clk    (port_spi_clk)                                            //             .spi_clk
+		.spi_clk    (port_spi_clk),                                           //             .spi_clk
+		.HEX0			(HEX0),	//read pointer												
+		.HEX1			(HEX1),	//write pointer
+		.HEX2			(HEX2),  //status bits
 	);
 
 	soc_system_sysid_qsys sysid_qsys (
