@@ -30,7 +30,6 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 	 output [0:6] HEX2; //Status bits
 	 
     //clock(50mhz in top.v), reset
-    
     input clk, reset;
 
     //avalon memory interface
@@ -87,15 +86,15 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
             readdata = 32'b0;
     end
     
-	 
-	 reg [31:0] data_temp;
+	 	 
     //write to regisers
+	 reg [31:0] status_clear; //request to clear register
     always @(posedge clk)
     begin
         if(reset)
         begin
             data <= 32'b0;
-            //status <= 32'b0;
+            status_clear <= 32'b0;
             control <= 32'b0;
             brd <= 32'b0;
         end
@@ -107,8 +106,8 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
                 case(address)
                     DATA_REG:
                         data = data_temp;
-                    //STATUS_REG:
-                         //status = writedata;
+                    STATUS_REG:
+                         status_clear = writedata;
                     CTRL_REG:
                         control = writedata;
                     BRD_REG:
@@ -117,10 +116,10 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
             end
         end
     
-    
     end
 	 
-	     //Rx, Tx fifo status bits
+	 
+	 //Rx, Tx fifo status bits
     wire  TXFF, TXFO, TXFE;
     wire  RXFF, RXFO, RXFE;
 	 
@@ -135,46 +134,9 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 			
 
     end
-
 	
     //write 1 clear to status register logic for overflow bit
     
-	 //positive edge pulse logic (write pulse)
-//	 reg old_write;
-//	 always @(posedge clk)
-//	 begin
-//		if(write && chipselect)
-//		begin
-//			if(address == DATA_REG)
-//				old_write <= write;
-//		end
-//	 end
-//	 assign write_pulse = write & ~old_write;
-//	 
-//	 
-//	 //positive edge pulse logic (read pulse)
-//	 reg old_read;
-//	 always @(posedge clk)
-//	 begin
-//		if(read && chipselect)
-//		begin
-//			if(address == DATA_REG)   
-//				old_read <= read;
-//		end
-//	 end
-//	 assign read_pulse = read & ~old_read;
-    
-	 
-//	 reg clear_overflow; //will clear the overflow in fifo if set
-//	 
-//	 always @(posedge clk)
-//	 begin
-//		if(TXFO)
-//			clear_overflow <= 1;
-//		else
-//			clear_overflow <= 0;
-//	 end
-//	 
     //4 spi components
     // BRD divider instance
 	 
@@ -183,13 +145,16 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 	wire read_pulse_clk;
 	
 	baudratedivider baud_out(.clock(clk), .enable(control[15]), .reset(reset), .N(brd[31:0]), .Nout(spi_clk));
-	 
-	//altera_edge_detector(.clk(spi_clk), .rst_n(~reset), .signal_in(write), .pulse_out(write_pulse_clk));
-	//altera_edge_detector(.clk(spi_clk), .rst_n(~reset), .signal_in(read), .pulse_out(read_pulse_clk));
-        
+	
+	
+	edgeDetect writeBlock(.clk(clk), .reset(reset), .signal(write), .chipselect(chipselect), .out_pulse(write_pulse_clk));
+	edgeDetect readBlock(.clk(clk), .reset(reset), .signal(read), .chipselect(chipselect), .out_pulse(read_pulse_clk));
+	
+   reg [31:0] data_temp;
    //Transmit FIFO
-   FIFO txFIFO(.Clock(~clk), .Full(TXFF), .EMPTY(TXFE), .OV(TXFO), .Read(~read), .Write(~write), .DataIn(data), .DataOut(data_temp), .Reset(~reset), .ClearOV(clear_overflow), .ReadPtr(readptr), .WritePtr(writeptr));
-    
+   FIFO txFIFO(.Clock(clk), .Full(TXFF), .EMPTY(TXFE), .OV(TXFO), .Read(read_pulse_clk), .Write(write_pulse_clk), .DataIn(writedata), .DataOut(data_temp), .Reset(reset), .ClearOV(clear_overflow), .ReadPtr(readptr), .WritePtr(writeptr), .address(adress), .chipselect(chipselect));
+   
+	
 	 
 	 //hex out for read ptr and write ptr.
 	binary2seven hex0(.BIN(readptr), .SEV(HEX0));
