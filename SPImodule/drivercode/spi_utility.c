@@ -112,6 +112,20 @@ int main(int argc, char *argv[])
 				printf("resetting rxfo bit\n");
 				setStatusReg(1);
 			}
+
+
+		}
+
+		else if(strcmp(argv[1], "enable") == 0)
+		{
+			if(argc == 3)
+			{
+				if(strcmp(argv[2], "ctrl_bit"))
+				{
+					setControlReg(1 << 15);
+				}
+			}
+
 		}
 
 		else
