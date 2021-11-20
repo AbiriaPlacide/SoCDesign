@@ -57,97 +57,7 @@ bool spiOpen()
     return bOK;
 }
 
-/*
-
-void selectPinPushPullOutput(uint8_t pin)
-{
-    uint32_t mask = 1 << pin;
-    *(base+OFS_OD)  &= ~mask;
-    *(base+OFS_OUT) |=  mask;
-}
-
-void selectPinOpenDrainOutput(uint8_t pin)
-{
-    uint32_t mask = 1 << pin;
-    *(base+OFS_OD)  |= mask;
-    *(base+OFS_OUT) |= mask;
-}
-
-void selectPinDigitalInput(uint8_t pin)
-{
-    uint32_t mask = 1 << pin;
-    *(base+OFS_OUT) &= ~mask;
-}
-
-void selectPinInterruptRisingEdge(uint8_t pin)
-{
-    uint32_t mask = 1 << pin;
-    *(base+OFS_INT_POSITIVE)  |=  mask;
-    *(base+OFS_INT_NEGATIVE)  &= ~mask;
-    *(base+OFS_INT_EDGE_MODE) |=  mask;
-}
-
-void selectPinInterruptFallingEdge(uint8_t pin)
-{
-    uint32_t mask = 1 << pin;
-    *(base+OFS_INT_POSITIVE)  &= ~mask;
-    *(base+OFS_INT_NEGATIVE)  |=  mask;
-    *(base+OFS_INT_EDGE_MODE) |=  mask;
-}
-
-void selectPinInterruptBothEdges(uint8_t pin)
-{
-    uint32_t mask = 1 << pin;
-    *(base+OFS_INT_POSITIVE)  |= mask;
-    *(base+OFS_INT_NEGATIVE)  |= mask;
-    *(base+OFS_INT_EDGE_MODE) |= mask;
-}
-
-void selectPinInterruptHighLevel(uint8_t pin)
-{
-    uint32_t mask = 1 << pin;
-    *(base+OFS_INT_POSITIVE)  |=  mask;
-    *(base+OFS_INT_NEGATIVE)  &= ~mask;
-    *(base+OFS_INT_EDGE_MODE) &= ~mask;
-}
-
-void selectPinInterruptLowLevel(uint8_t pin)
-{
-    uint32_t mask = 1 << pin;
-    *(base+OFS_INT_POSITIVE)  &= ~mask;
-    *(base+OFS_INT_NEGATIVE)  |=  mask;
-    *(base+OFS_INT_EDGE_MODE) &= ~mask;
-}
-
-void enablePinInterrupt(uint8_t pin)
-{
-    uint32_t mask = 1 << pin;
-    *(base+OFS_INT_ENABLE) |= mask;
-}
-
-void disablePinInterrupt(uint8_t pin)
-{
-    uint32_t mask = 1 << pin;
-    *(base+OFS_INT_ENABLE) &= ~mask;
-}
-
-void setPinValue(uint8_t pin, bool value)
-{
-    uint32_t mask = 1 << pin;
-    if (value)
-        *(base+OFS_DATA) |= mask;
-    else
-        *(base+OFS_DATA) &= ~mask;
-}
-
-bool getPinValue(uint8_t pin)
-{
-    uint32_t value = *(base+OFS_DATA);
-    return (value >> pin) & 1;
-}
-*/
-
-void setPortValue(uint32_t value)
+void setDataReg(uint32_t value)
 {
      *(base+OFS_DATA) = value;
 }
@@ -162,13 +72,13 @@ void setStatusReg(uint32_t value)
 	*(base+OFS_STATUS) = value;
 }
 
-void setBaudRateReg(uint32_t value) //remember to change func arguments to convert frequency to brd value
+void setBaudrateReg(uint32_t value) //remember to change func arguments to convert frequency to brd value
 {
     //should be frequency converted to brd value. change later
      *(base+OFS_BRD) = value;
 }
 
-uint32_t getPortValue()
+uint32_t getDataReg()
 {
     uint32_t value = *(base+OFS_DATA);
     return value;
@@ -186,7 +96,7 @@ uint32_t getStatusReg()
     return value;
 }
 
-uint32_t getBaudRateReg() 
+uint32_t getBaudrateReg() 
 {
     uint32_t value = *(base+OFS_BRD);
     return value;
@@ -241,13 +151,12 @@ bool getTxEmpty()
 }
 
 //enable transmit/receiver/brd
-
 void setCtrlEnableBit(bool bit)
 {
     //this will turn on transmitter/receiver/brd
 	if(bit)
-		*(base+OFS_CTRL) |= (1 << 15);
+		*(base+OFS_CTRL) = (1 << 15);
 	else
-		*(base+OFS_CTRL) &= ~(1 << 15);
+		*(base+OFS_CTRL) = ~(1 << 15);
 }
 
