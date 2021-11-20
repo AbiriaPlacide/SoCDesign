@@ -164,13 +164,46 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 	baudratedivider baud_out(.clock(clk), .enable(control[15]), .reset(reset), .N(brd[31:0]), .Nout(spi_clk));
 	
 	
-	edgeDetect writeBlock(.clk(spi_clk), .reset(reset), .signal(write), .chipselect(chipselect), .out_pulse(write_pulse_clk));
-	edgeDetect readBlock(.clk(spi_clk), .reset(reset), .signal(read), .chipselect(chipselect), .out_pulse(read_pulse_clk));
+	edgeDetect writeBlock(.clk(clk), .reset(reset), .signal(write), .chipselect(chipselect), .out_pulse(write_pulse_clk));
+	edgeDetect readBlock(.clk(clk), .reset(reset), .signal(read), .chipselect(chipselect), .out_pulse(read_pulse_clk));
 	
    reg [31:0] data_temp;
    //Transmit FIFO
-   FIFO txFIFO(.Clock(spi_clk), .Full(TXFF), .EMPTY(TXFE), .OV(TXFO), .Read(read_pulse_clk), .Write(write_pulse_clk), .DataIn(writedata), .DataOut(data_temp), .Reset(reset), .ClearOV(clear_overflow), .ReadPtr(readptr), .WritePtr(writeptr), .address(address), .chipselect(chipselect));
+   FIFO txFIFO(.Clock(clk), .Full(TXFF), .EMPTY(TXFE), .OV(TXFO), .Read(read_pulse_clk), .Write(write_pulse_clk), .DataIn(writedata), .DataOut(data_temp), .Reset(reset), .ClearOV(clear_overflow), .ReadPtr(readptr), .WritePtr(writeptr), .address(address), .chipselect(chipselect));
    
+	
+	//spi serializer logic
+	
+	//if empty stay in idle state
+	
+	//if not empty and !cs_auto -> start transmitting
+	
+		//cs auto is a mux, cs auto is a single bit but there are in fact 4 single bit values that you have to select from,
+			//youre only transmitting from one of the CS's at once. 
+			//what is the register that tells you what the setting of the switchi is : it is CS_SELECT bits 14:13
+			
+			//transmit bit state
+					//there should be a counter that determines if your done transmitting bits
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
 	 
 	 //hex out for read ptr and write ptr 
 	binary2seven hex0(.BIN(readptr), .SEV(HEX0)); //read ptr
