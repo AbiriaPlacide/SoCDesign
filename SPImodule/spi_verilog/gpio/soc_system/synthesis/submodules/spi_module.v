@@ -164,12 +164,12 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 	baudratedivider baud_out(.clock(clk), .enable(control[15]), .reset(reset), .N(brd[31:0]), .Nout(spi_clk));
 	
 	
-	edgeDetect writeBlock(.clk(clk), .reset(reset), .signal(write), .chipselect(chipselect), .out_pulse(write_pulse_clk));
-	edgeDetect readBlock(.clk(clk), .reset(reset), .signal(read), .chipselect(chipselect), .out_pulse(read_pulse_clk));
+	edgeDetect writeBlock(.clk(spi_clk), .reset(reset), .signal(write), .chipselect(chipselect), .out_pulse(write_pulse_clk));
+	edgeDetect readBlock(.clk(spi_clk), .reset(reset), .signal(read), .chipselect(chipselect), .out_pulse(read_pulse_clk));
 	
    reg [31:0] data_temp;
    //Transmit FIFO
-   FIFO txFIFO(.Clock(clk), .Full(TXFF), .EMPTY(TXFE), .OV(TXFO), .Read(read_pulse_clk), .Write(write_pulse_clk), .DataIn(writedata), .DataOut(data_temp), .Reset(reset), .ClearOV(clear_overflow), .ReadPtr(readptr), .WritePtr(writeptr), .address(address), .chipselect(chipselect));
+   FIFO txFIFO(.Clock(spi_clk), .Full(TXFF), .EMPTY(TXFE), .OV(TXFO), .Read(read_pulse_clk), .Write(write_pulse_clk), .DataIn(writedata), .DataOut(data_temp), .Reset(reset), .ClearOV(clear_overflow), .ReadPtr(readptr), .WritePtr(writeptr), .address(address), .chipselect(chipselect));
    
 	 
 	 //hex out for read ptr and write ptr 
