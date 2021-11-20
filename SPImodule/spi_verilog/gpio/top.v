@@ -143,7 +143,7 @@ module top
     output  [0:6]  HEX0,
     output  [0:6]  HEX1,
     output  [0:6]  HEX2,
-    output  [6:0]  HEX3,
+    output  [0:6]  HEX3,
     output  [6:0]  HEX4,
     output  [6:0]  HEX5,
 
@@ -225,7 +225,7 @@ module top
     //assign HEX0 = 7'b1111111;
     //assign HEX1 = 7'b1111111;
     //assign HEX2 = 7'b1111111;
-    assign HEX3 = 7'b1111111;
+    //assign HEX3 = 7'b1111111;
     assign HEX4 = 7'b1111111;
     assign HEX5 = 7'b1000010; // G
 
@@ -262,6 +262,7 @@ module top
 		  .HEX0											  (HEX0),
 		  .HEX1											  (HEX1),
 		  .HEX2											  (HEX2),
+		  .HEX3											  (HEX3),
         .memory_mem_a                          (HPS_DDR3_ADDR),
         .memory_mem_ba                         (HPS_DDR3_BA),
         .memory_mem_ck                         (HPS_DDR3_CK_P),

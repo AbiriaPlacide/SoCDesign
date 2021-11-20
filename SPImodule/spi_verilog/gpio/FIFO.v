@@ -7,15 +7,12 @@ module FIFO #(parameter FIFOSIZE = 16, FIFOWIDTH = 32)
 				input [FIFOWIDTH-1:0] DataIn, 
 				output reg [FIFOWIDTH-1:0] DataOut, 
 				output Full,
-				output reg OV,
+				output reg OV, //registered
 				output EMPTY,
 				output reg [3:0] ReadPtr,
 				output reg [3:0] WritePtr,
-				input address,
+				input [1:0] address,
 				input chipselect
-				//output [0:6] hexOutput0, 
-				//output [0:6] hexOutput2,
-				//output [0:6] hexOutput3
 );
 
 reg [FIFOWIDTH-1:0] STACK [FIFOSIZE-1:0]; //Storage elements
@@ -36,10 +33,11 @@ begin
 			DataOut <= 0; //clear output buffer
 			ReadPtr <= 0; //reset readpointer
 			WritePtr <= 0; // reset writeptr
+			Overflow <= 0;
 		end
 	else
 		begin //beginning of state machine
-			if(Read && !EMPTY && (address == 1'b00) && chipselect == 1'b1) //!READ because KEY2 is active-low| on a read and not empty
+			if((Read) && (!EMPTY) && (address == 2'b00) && chipselect == 1'b1) //!READ because KEY2 is active-low| on a read and not empty
 				begin 
 					if(!OV)
 						begin
@@ -75,30 +73,29 @@ begin
 end //end of block
 
 
-////overflow logic
-//always @(negedge Clock) 
-//begin
-//	if (Overflow)
-//		begin
-//			OV <= 1;
-//		end
-//	else 
-//	begin
-//		if(ClearOV)
-//		begin
-//			OV <= 0;
-//		end
-//		else
-//		begin
-//			OV <= OV;
-//		end
-//	end
-//
-//end
+//overflow logic
+always @(posedge Clock) 
+begin
+	if (Overflow)
+		begin
+			OV <= 1;
+		end
+	else 
+	begin
+		if(ClearOV)
+		begin
+			OV <= 0;
+		end
+		else
+		begin
+			OV <= OV;
+		end
+	end
+
+end
 
  
 
 endmodule
-
 
 
