@@ -93,7 +93,9 @@ module soc_system (
 		output wire [0:6]  HEX0, //read ptr
 		output wire [0:6]  HEX1, //write ptr
 		output wire [0:6]  HEX2,  //status bits
-		output wire [0:6]  HEX3
+		output wire [0:6]  HEX3,  //Data out of fifo
+		output wire [0:6]  HEX4,   //COUNT of tx
+		output [9:0] LEDR
 	);
 
 	wire   [1:0] hps_0_h2f_axi_master_awburst;                              // hps_0:h2f_AWBURST -> mm_interconnect_0:hps_0_h2f_axi_master_awburst
@@ -547,8 +549,10 @@ module soc_system (
 		.spi_clk    (port_spi_clk),                                           //             .spi_clk
 		.HEX0			(HEX0),	//read pointer												
 		.HEX1			(HEX1),	//write pointer
-		.HEX2			(HEX2), //status bits
-		.HEX3			(HEX3)	//
+		.HEX2			(HEX2),  //status bits
+		.HEX3			(HEX3),	// data out of fifo
+		.HEX4			(HEX4),  //COUNT of Transmit
+		.LEDR			(LEDR)
 	);
 
 	soc_system_sysid_qsys sysid_qsys (

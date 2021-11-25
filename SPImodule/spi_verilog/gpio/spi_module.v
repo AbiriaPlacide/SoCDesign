@@ -1,38 +1,42 @@
-    /*assignment bits for CTR_REG
-    wire [4:0] WORD_SIZE  = DATA_REG[4:0];
-    wire CS0_AUTO             = DATA_REG[5];
-    wire CS1_AUTO           = DATA_REG[6];
-    wire CS2_AUTO             = DATA_REG[7];
-    wire CS3_AUTO           = DATA_REG[8];
-    wire CS0_ENABLE         = DATA_REG[9];
-    wire CS1_ENABLE          = DATA_REG[10];
-    wire CS2_ENABLE          = DATA_REG[11];
-    wire CS3_ENABLE          = DATA_REG[12];
-    wire [1:0]CS_SELECT   = DATA_REG[14:13];
-    wire ENABLE              = DATA_REG[15];
-    wire [1:0] MODE0      = DATA_REG[17:16];
-    wire [1:0] MODE1      = DATA_REG[19:18];
-    wire [1:0] MODE2      = DATA_REG[21:20];
-    wire [1:0] MODE3      = DATA_REG[23:22];
-    wire [7:0] DEBUG_OUT  = DATA_REG[31:24];
-    */
 
 
 
-module spi_module(clk, reset, read, write, chipselect, address, writedata,readdata, byteenable, baudrate,spi_clk, spi_tx, spi_rx,spi_cs0,spi_cs1,spi_cs2,spi_cs3, HEX0, HEX1, HEX2, HEX3);
-    
-    //HEX
+module spi_module(clk, reset, read, write, chipselect, address, writedata,readdata, byteenable, baudrate,spi_clk, spi_tx, spi_rx,spi_cs0,spi_cs1,spi_cs2,spi_cs3, HEX0, HEX1, HEX2, HEX3, HEX4, LEDR);
+
+	 //signals for the control regiser
+    wire [4:0] WORD_SIZE  = control[4:0];
+    wire CS0_AUTO         = control[5];
+    wire CS1_AUTO         = control[6];
+    wire CS2_AUTO         = control[7];
+    wire CS3_AUTO         = control[8];
+    wire CS0_ENABLE       = control[9];
+    wire CS1_ENABLE       = control[10];
+    wire CS2_ENABLE       = control[11];
+    wire CS3_ENABLE       = control[12];
+    wire [1:0]CS_SELECT   = control[14:13];
+    wire ENABLE           = control[15];
+    wire [1:0] MODE0      = control[17:16];
+    wire [1:0] MODE1      = control[19:18];
+    wire [1:0] MODE2      = control[21:20];
+    wire [1:0] MODE3      = control[23:22];
+    wire [7:0] DEBUG_OUT  = control[31:24];
+	 //end of control reg signals
 	 
 	 wire [3:0] readptr;
 	 wire [3:0] writeptr;
+	 
+	 //debug outputs
+	 //hex ooutput
 	 output [0:6] HEX0; //read pointer
 	 output [0:6] HEX1; //write pointer
 	 output [0:6] HEX2; //Status bits
-	 output [0:6] HEX3; //random status
+	 output [0:6] HEX3; //data out of fifo
+	 output [0:6] HEX4;
+	 output [9:0] LEDR;
 	 
     //clock(50mhz in top.v), reset
     input clk, reset;
-
+	 
     //avalon memory interface
     input read, write, chipselect;
     input [1:0] address;
@@ -40,16 +44,16 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
     input [31:0]  writedata;
     output reg [31:0]  readdata;
     //spi output pins
-    output reg baudrate; //GPIO_0[1]
-    output reg spi_tx;   //GPIO_0[7]
-    output reg spi_clk;  //GPIO_0[11]
-    output reg spi_cs0;  //GPIO_0[13]
-    output reg spi_cs1;  //GPIO_0[15]
-    output reg spi_cs2;  //GPIO_0[17]
-    output reg spi_cs3;  //GPIO_0[19]
+    output reg baudrate; //GPIO_0[1]   Waveform Dx
+    output reg spi_tx;   //GPIO_0[7]   Waveform D0
+    output reg spi_clk;  //GPIO_0[11]  Waveform D2
+    output reg spi_cs0;  //GPIO_0[13]  Waveform D3
+    output reg spi_cs1;  //GPIO_0[15]  Waveform D4
+    output reg spi_cs2;  //GPIO_0[17]  Waveform D5
+    output reg spi_cs3;  //GPIO_0[19]  Waveform D6
     
     //spi input pins
-    input      spi_rx;   //GPIO_0[9]
+    input      spi_rx;   //GPIO_0[9] Waveform D1
     
     // internal registers
     reg [31:0] data; //gpio interface for spi ( TX,RX, , CSn)
@@ -134,8 +138,6 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 		begin
 			status[5:0] <= {TXFE, TXFF, TXFO, RXFE, RXFF, RXFO};
 		end
-			
-
     end
 	
     //write 1 clear to status register logic for txfo overflow bit
@@ -154,33 +156,154 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 		end
 	 end
     
-    //4 spi components
-    // BRD divider instance
+    
 	 
-	 
-   wire write_pulse_clk;
-	wire read_pulse_clk;
 	
-	baudratedivider baud_out(.clock(clk), .enable(control[15]), .reset(reset), .N(brd[31:0]), .Nout(spi_clk));
+	//BAUD OUT CLK.
+	 baudratedivider baud_out(.clock(clk), .enable(control[15]), .reset(reset), .N(brd[31:0]), .Nout(spi_clk));
 	
 	
-	edgeDetect writeBlock(.clk(clk), .reset(reset), .signal(write), .chipselect(chipselect), .out_pulse(write_pulse_clk));
-	edgeDetect readBlock(.clk(clk), .reset(reset), .signal(read), .chipselect(chipselect), .out_pulse(read_pulse_clk));
+	//edge detect logic
+	 wire read_pulse_clk;
+	 wire write_pulse_clk;
+	 edgeDetect readBlock(.clk(clk), .reset(reset), .signal(read), .chipselect(chipselect), .out_pulse(read_pulse_clk));
+	 edgeDetect writeBlock(.clk(clk), .reset(reset), .signal(write), .chipselect(chipselect), .out_pulse(write_pulse_clk));
+
 	
-   reg [31:0] data_temp;
-   //Transmit FIFO
-   FIFO txFIFO(.Clock(clk), .Full(TXFF), .EMPTY(TXFE), .OV(TXFO), .Read(read_pulse_clk), .Write(write_pulse_clk), .DataIn(writedata), .DataOut(data_temp), .Reset(reset), .ClearOV(clear_overflow), .ReadPtr(readptr), .WritePtr(writeptr), .address(address), .chipselect(chipselect));
+	 //Transmit FIFO
+    reg [31:0] data_temp2 = 32'b11001110;
+    reg [31:0] data_temp;
+    FIFO txFIFO(.Clock(clk), 
+					 .Full(TXFF), 
+					 .EMPTY(TXFE), 
+					 .OV(TXFO), 
+					 .READ_DONE(READ_DONE), 
+					 .Read(READ_DONE), 
+					 .Write(write_pulse_clk), 
+					 .DataIn(writedata), 
+					 .DataOut(data_temp), 
+					 .Reset(reset), 
+					 .ClearOV(clear_overflow), 
+					 .ReadPtr(readptr), 
+					 .WritePtr(writeptr), 
+					 .address(address), 
+					 .chipselect(chipselect)
+					 );
    
+	//spi serializer logic
+	
+	 wire LOAD, DECREMENT;//, READ_DONE;
+	 assign LOAD = (State == IDLE);
+	 assign DECREMENT = (State == TX_RX) && (~spi_clk); //update count on the negedge of spi_clk= baud_out
+	 //assign READ_DONE = (State == TX_RX) && (COUNT==0);
+	
+	 reg READ_DONE;
+
+	  //counter block
 	 
-	 //hex out for read ptr and write ptr 
-	binary2seven hex0(.BIN(readptr), .SEV(HEX0)); //read ptr
+	 reg [4:0] COUNT;
+	 
+	 always @(posedge spi_clk)
+	 begin
+		if(reset)
+			COUNT <= 0;
+		else
+		begin 
+			if(LOAD)
+				COUNT <= control[4:0];
+			else if(DECREMENT)
+				COUNT <= COUNT-1;
+		end
+	end
+
+	//spi serializer tx states
+	 parameter IDLE      = 4'b1010; //10 0xA
+	 parameter CS_ASSERT = 4'b1011; //11 0xB
+	 parameter TX_RX     = 4'b1100; //12 0xC
 	
-	binary2seven hex1(.BIN(writeptr),.SEV(HEX1)); //write ptr
 	
-	binary2seven hex2 (.BIN({TXFF,TXFO,TXFE}), .SEV(HEX2) ); //
+	 reg [3:0] State;
+	 reg [3:0] nextState;
 	
-	binary2seven hex3(.BIN(data_temp[3:0]),.SEV(HEX3) );
+	 always @(posedge clk)
+	 begin
+	 	if(reset || !ENABLE)
+			State <= IDLE;
+		else
+			State <= nextState;
+	 end
+	
+	 
+	//functional block that will output cs output
+	//enable control
+	 always @(posedge clk)
+	 begin
+		case(State)
+			IDLE:
+			begin
+				if(TXFE)
+				begin
+					nextState <= IDLE;
+					spi_cs0 <= 1;
+				end
+				
+				else if(!TXFE && !CS0_AUTO)
+				begin
+					spi_cs0 <= 0;	
+					//assert Manual CS MODE before transitionition to to tx_rx state.
+					nextState <= TX_RX;
+				end
+			end
+			
+			TX_RX:
+			begin
+				//when count goes to  zero and in manual and empty go back to zero
+				if(READ_DONE)
+				begin
+					nextState <= IDLE;
+				end
+				else
+				begin
+					nextState <= TX_RX;
+				end
+			end
+			
+		 endcase
+	 end
+	 
+	 //transmit logic to spi_tx pin
+	 always @(negedge spi_clk)
+	 begin
+		if(COUNT == 0)
+		begin
+			READ_DONE <= 1;
+			spi_tx <= data_temp[COUNT];
+		end
+		else
+		begin
+			READ_DONE <= 0;
+			spi_tx <= data_temp[COUNT+1];
+		end
+	 end
+	 
+	//if not empty and !cs_auto -> start transmitting
+	
+		//cs auto is a mux, cs auto is a single bit but there are in fact 4 single bit values that you have to select from,
+			//youre only transmitting from one of the CS's at once. 
+			//what is the register that tells you what the setting of the switchi is : it is CS_SELECT bits 14:13
+			
+			//transmit bit state
+					//there should be a counter that determines if your done transmitting bits
+	 
+	 //hex out for read ptr and write ptr and status bits for debugging
+	 binary2seven hex0(.BIN(readptr), .SEV(HEX1)); //read ptr
+	 binary2seven hex1(.BIN(writeptr),.SEV(HEX0)); //write ptr
+	 binary2seven hex2 (.BIN({TXFF,TXFO,TXFE}), .SEV(HEX2) ); //
+	 binary2seven hex3(.BIN(data_temp[3:0]),.SEV(HEX3));
+	 binary2seven hex4(.BIN(State[3:0]), .SEV(HEX4));
+	 
 endmodule
+
 
 
 

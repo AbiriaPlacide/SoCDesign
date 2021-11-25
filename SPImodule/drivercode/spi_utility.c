@@ -73,28 +73,105 @@ int main(int argc, char *argv[])
 			{
 				if(strcmp(argv[2], "data") == 0)
 				{
-					printf("setting data reg: %08x \n", atoi(argv[3]));
-					setDataReg(atoi(argv[3]));
+
+					uint32_t x = strtoull(argv[3], NULL, 16);
+					printf("setting data reg: %08x \n", x);
+					setDataReg(x);
 				}
 
 				else if(strcmp(argv[2], "status") == 0)
 				{
-					printf("setting status reg: %08x \n", atoi(argv[3]));
-					setStatusReg(atoi(argv[3]));
+					uint32_t x = strtoull(argv[3], NULL, 16);
+					printf("setting status reg: with %u\n", x);
+					setStatusReg(x);
 				}
 
 				else if(strcmp(argv[2], "control") == 0)
 				{
-					printf("setting control reg: %08x \n", atoi(argv[3]));
+					uint32_t x = strtoull(argv[3], NULL, 16);
+					printf("setting control reg with %u\n", x);
 					setControlReg(atoi(argv[3]));
 				}
 
 				else if(strcmp(argv[2], "brd") == 0)
 				{
-					printf("setting baud reg: %08x \n", atoi(argv[3]));
-					setBaudrateReg(atoi(argv[3]));
+					uint32_t x = strtoull(argv[3], NULL, 10);
+					printf("setting baud reg with %u\n", x);
+					setBaudrateReg(x);
 				}
 
+				else if(strcmp(argv[2], "word_size") == 0)
+				{
+					if(atoi(argv[3]) > 32)
+					{
+						printf("word size must be less than 33\n");
+					}
+
+					else
+					{
+						printf("setting word size\n");
+						clearControlReg(31); //clears first 5 bits
+						uint32_t x = strtoull(argv[3], NULL, 10);
+						modControlReg(x-1); //sets first 5
+					}
+				}
+
+				else
+				{
+					printf("invalid set command %s \n" , argv[2]);
+				}
+			}
+
+			if(argc == 3)
+			{
+
+				if(strcmp(argv[2], "cs0_enable") == 0)
+				{
+					printf("setting cs0_enable\n");
+					modControlReg(1 << 9);
+				}
+
+				else if(strcmp(argv[2], "cs1_enable") == 0)
+				{
+					printf("setting cs1_enable\n");
+					modControlReg(2 << 9);
+				}
+
+				else if(strcmp(argv[2], "cs2_enable") == 0)
+				{
+					printf("setting cs2_enable\n");
+					modControlReg(4 << 9);
+				}
+
+				else if(strcmp(argv[2], "cs3_enable") == 0)
+				{
+					printf("setting cs3_enable\n");
+					modControlReg(8 << 9);
+				}
+
+				else if(strcmp(argv[2], "cs0_auto") == 0)
+				{
+					printf("setting cs0_auto\n");
+					modControlReg(1 << 5);
+				}
+
+				else if(strcmp(argv[2], "cs1_auto") == 0)
+				{
+					printf("setting cs1_enable\n");
+					modControlReg(2 << 5);
+				}
+
+				else if(strcmp(argv[2], "cs2_auto") == 0)
+				{
+					printf("setting cs2_enable\n");
+					modControlReg(4 << 5);
+				}
+
+				else if(strcmp(argv[2], "cs3_auto") == 0)
+				{
+					printf("setting cs3_enable\n");
+					modControlReg(8 << 5);
+				}
 			}
 
 		}
@@ -113,24 +190,43 @@ int main(int argc, char *argv[])
 				setStatusReg(1);
 			}
 
+			else if(strcmp(argv[2], "cs_auto") == 0)
+			{
+				printf("clearing cs_auto bits\n");
+				clearControlReg(15 << 5);
+			}
+
+			else if(strcmp(argv[2], "cs_enable") == 0)
+			{
+				printf("clearing cs_enable bits\n");
+				clearControlReg(15 << 9);
+			}
 
 		}
+
 
 		else if(strcmp(argv[1], "enable") == 0)
 		{
 			if(argc == 3)
 			{
-				if(strcmp(argv[2], "ctrl_bit"))
+				if(strcmp(argv[2], "control_bit") ==0)
 				{
-					setControlReg(1 << 15);
+					printf("enabling tx/rx/baudrate\n");
+					setCtrlEnableBit(1);
 				}
 			}
-
 		}
 
-		else
+		else if(strcmp(argv[1], "disable") == 0)
 		{
-			printf("unknown command\n");
+			if(argc == 3)
+			{
+				if(strcmp(argv[2], "control_bit") == 0)
+				{
+					printf("enabling tx/rx/baudrate\n");
+					setCtrlEnableBit(0);
+				}
+			}
 		}
 	}
 }

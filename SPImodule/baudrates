@@ -1,0 +1,15 @@
+at a clock of 25MHZ
+
+bottom 6 bits are used for fractional divider 
+remaining bits are used for integer portion
+
+115200 : diviser  = 27776  = (217 << 7)
+9600   : diviser = 333312 = (2604 << 7)
+
+
+configure the module
+
+1) control [4:0] = word size
+2) control[15] = enable
+3) brd = 115200 or 9600
+4) set data reg

@@ -12,7 +12,8 @@ module FIFO #(parameter FIFOSIZE = 16, FIFOWIDTH = 32)
 				output reg [3:0] ReadPtr,
 				output reg [3:0] WritePtr,
 				input [1:0] address,
-				input chipselect
+				input chipselect,
+				input READ_DONE
 );
 
 reg [FIFOWIDTH-1:0] STACK [FIFOSIZE-1:0]; //Storage elements
@@ -30,18 +31,17 @@ begin
 	if(Reset)
 		begin 
 			FIFO_Counter <= 0;
-			DataOut <= 0; //clear output buffer
 			ReadPtr <= 0; //reset readpointer
 			WritePtr <= 0; // reset writeptr
 			Overflow <= 0;
 		end
 	else
-		begin //beginning of state machine
-			if((Read) && (!EMPTY) && (address == 2'b00) && chipselect == 1'b1) //!READ because KEY2 is active-low| on a read and not empty
+		begin //beginning of state machine				
+			if( ((Read) && (!EMPTY) ))//(address == 2'b00) && chipselect == 1'b1) ) //!READ because KEY2 is active-low| on a read and not empty
 				begin 
 					if(!OV)
 						begin
-							DataOut <= STACK[ReadPtr];
+							//DataOut <= STACK[ReadPtr];//[x]
 							ReadPtr <= ReadPtr + 1'b1;
 							FIFO_Counter <= FIFO_Counter - 1'b1; //subtract 1 count on each read
 						end
@@ -52,7 +52,7 @@ begin
 //							FIFO_Counter <= FIFO_Counter - 1'b1; //subtract 2 count on read when in overflow since counter  == 17
 //						end
 				end
-			 else if(Write && !Overflow && (address == 2'b00) && chipselect == 1'b1) //what to do on a write. !Write because active-low
+			 else if( (Write && !Overflow && (address == 2'b00) && chipselect == 1'b1)) //what to do on a write. !Write because active-low
 				 begin
 					if(!Full)
 						begin
@@ -67,12 +67,21 @@ begin
 						end
 				 end 
 			else
+			begin
+				//DataOut <= STACK[ReadPtr];//[x]
 				Overflow <= 0;
-			
+			end
 		end //end of else
 end //end of block
 
-
+//always have data on coming out of FIFO.
+always @(posedge Clock)
+begin
+	if(Reset)
+		DataOut <= 0;
+	else 
+		DataOut <= STACK[ReadPtr];
+end
 //overflow logic
 always @(posedge Clock) 
 begin

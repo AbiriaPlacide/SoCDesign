@@ -32,6 +32,8 @@
 
 void setDataReg(uint32_t value);
 void setControlReg(uint32_t value);
+void modControlReg(uint32_t value);
+void clearControlReg(uint32_t value);
 void setStatusReg(uint32_t value);
 void setBaudrateReg(uint32_t value);
 

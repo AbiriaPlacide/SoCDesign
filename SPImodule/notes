@@ -1,0 +1,11 @@
+if youre in auto cs mode, you need to pull CS low, transmit the bits, pull CS high. 
+
+if not in AUTO CS MODE, cs has already been pulled low by someone else, so just transmit the bits out.
+
+	if youre in auto cs mode, you have to be sure that there is one clock high of CS between pulses low. 
+
+Three states: IDLE, TX_RX, CS_ASSERT
+when to read?
+	if empty, stay in idle.
+	if not empty and !CS_AUTO -> start transmitting
+	else if  EMPTY and CS_AUTO, go to  CS_ASSERT(There are 4 CS AUTO Values you have to select from(its basically a mux). Youre only transmitting on one of the CS's at once. The Control register will tell you the setting of the MUX. That value is CS_SELECT. CS_SELECT selects the mux and gives you one clean value of CS_AUTO value.  
