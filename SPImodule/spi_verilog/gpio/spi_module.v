@@ -9,16 +9,21 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
     wire CS1_AUTO         = control[6];
     wire CS2_AUTO         = control[7];
     wire CS3_AUTO         = control[8];
+	 assign CS_AUTO = {CS3_AUTO, CS2_AUTO, CS1_AUTO, CS0_AUTO};
+	 
     wire CS0_ENABLE       = control[9];
     wire CS1_ENABLE       = control[10];
     wire CS2_ENABLE       = control[11];
     wire CS3_ENABLE       = control[12];
-    wire [1:0]CS_SELECT   = control[14:13];
+	 assign CS_ENABLE = {CS3_ENABLE, CS2_ENABLE, CS1_ENABLE, CS0_ENABLE};
+    
+	 wire [1:0]CS_SELECT   = control[14:13];
     wire ENABLE           = control[15];
     wire [1:0] MODE0      = control[17:16];
     wire [1:0] MODE1      = control[19:18];
     wire [1:0] MODE2      = control[21:20];
     wire [1:0] MODE3      = control[23:22];
+	 assign MODE = {MODE3, MODE2, MODE1, MODE0};
     wire [7:0] DEBUG_OUT  = control[31:24];
 	 //end of control reg signals
 	 
@@ -120,7 +125,7 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 				
 				else
 				begin
-					status_clear_req <= 0;
+					status_clear_req <= 1'b0;
 				end
         end
     
@@ -133,7 +138,7 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 	 always @ (posedge clk or posedge reset)
 	 begin
 		if(reset)
-			status[5:0] <= 0;
+			status[5:0] <= 1'b0;
 		else
 		begin
 			status[5:0] <= {TXFE, TXFF, TXFO, RXFE, RXFF, RXFO};
@@ -146,13 +151,13 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 	 always @(posedge clk)
 	 begin 
 		if(reset)
-			clear_overflow <=0;
+			clear_overflow <=1'b0;
 		else
 		begin
 			if(status_clear_req[3])
-				clear_overflow <=1;
+				clear_overflow <= 1'b1;
 			else
-				clear_overflow <= 0;
+				clear_overflow <= 1'b0;
 		end
 	 end
     
@@ -171,7 +176,7 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 
 	
 	 //Transmit FIFO
-    reg [31:0] data_temp2 = 32'b11001110;
+    reg [31:0] data_temp2 = 32'b11001110; //for testing purposes only
     reg [31:0] data_temp;
     FIFO txFIFO(.Clock(clk), 
 					 .Full(TXFF), 
@@ -206,13 +211,13 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 	 always @(posedge spi_clk)
 	 begin
 		if(reset)
-			COUNT <= 0;
+			COUNT <= 1'b0;
 		else
 		begin 
 			if(LOAD)
 				COUNT <= control[4:0];
 			else if(DECREMENT)
-				COUNT <= COUNT-1;
+				COUNT <= COUNT- 1'b1;
 		end
 	end
 
@@ -236,23 +241,29 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 	 
 	//functional block that will output cs output
 	//enable control
-	 always @(posedge clk)
+	 always @(posedge spi_clk)
 	 begin
 		case(State)
 			IDLE:
 			begin
+				//if in idle, cs idles high
+				spi_cs0 <= 1'b1;
+				spi_cs1 <= 1'b1;
+				spi_cs2 <= 1'b1;
+				spi_cs3 <= 1'b1;
+			
 				if(TXFE)
 				begin
 					nextState <= IDLE;
-					spi_cs0 <= 1;
 				end
 				
-				else if(!TXFE && !CS0_AUTO)
-				begin
-					spi_cs0 <= 0;	
-					//assert Manual CS MODE before transitionition to to tx_rx state.
+				else if(!TXFE && !CS_AUTO) //if CS_ENABLE, then we know its in manual mode
+				begin	
 					nextState <= TX_RX;
 				end
+				
+				else //automatic mode
+					nextState <= CS_ASSERT;
 			end
 			
 			TX_RX:
@@ -264,36 +275,68 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 				end
 				else
 				begin
+					if(CS0_ENABLE)
+						spi_cs0 <= 1'b0;
+					if(CS1_ENABLE)
+						spi_cs1 <= 1'b0;
+					if(CS2_ENABLE)
+						spi_cs2 <= 1'b0;
+					if(CS3_ENABLE)
+						spi_cs3 <= 1'b0;
+						
 					nextState <= TX_RX;
+					
 				end
+			end
+			
+			CS_ASSERT:
+			begin
+				//check which chip-selects needs to be driven low and do drive it low
+				if(CS0_AUTO)
+				begin
+					spi_cs0 <= 1'b0;
+				end
+				
+				else if(CS1_AUTO)
+				begin
+					spi_cs1 <= 1'b0;
+				end
+				
+				else if(CS2_AUTO)
+				begin
+					spi_cs2 <= 1'b0;
+				end
+					
+				else if(CS3_AUTO)
+				begin
+					spi_cs3 <= 1'b0;
+				end
+				
+				nextState <= TX_RX; //after CS_ASSERT, go to tx_rx state
 			end
 			
 		 endcase
 	 end
-	 
+
 	 //transmit logic to spi_tx pin
 	 always @(negedge spi_clk)
 	 begin
-		if(COUNT == 0)
-		begin
-			READ_DONE <= 1;
-			spi_tx <= data_temp[COUNT];
-		end
-		else
-		begin
-			READ_DONE <= 0;
-			spi_tx <= data_temp[COUNT+1];
-		end
-	 end
-	 
-	//if not empty and !cs_auto -> start transmitting
-	
-		//cs auto is a mux, cs auto is a single bit but there are in fact 4 single bit values that you have to select from,
-			//youre only transmitting from one of the CS's at once. 
-			//what is the register that tells you what the setting of the switchi is : it is CS_SELECT bits 14:13
+		 //read done is always 0 unless count == 0;
+	 	 READ_DONE <= 1'b0;
+		 
+		 if(State == TX_RX)
+		 begin
+			spi_tx <= data_temp[COUNT];// if not +1, that last bit is lost
 			
-			//transmit bit state
-					//there should be a counter that determines if your done transmitting bits
+			if(COUNT == 1'b0)
+			begin
+				READ_DONE <= 1'b1;
+				spi_tx <= data_temp[0];
+			end
+		 end
+		 else
+			spi_tx <= 0;
+	 end
 	 
 	 //hex out for read ptr and write ptr and status bits for debugging
 	 binary2seven hex0(.BIN(readptr), .SEV(HEX1)); //read ptr
