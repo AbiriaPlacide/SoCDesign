@@ -1,3 +1,6 @@
+// GPIO IP Library Registers
+// Jason Losh
+
 //-----------------------------------------------------------------------------
 // Hardware Target
 //-----------------------------------------------------------------------------
@@ -7,14 +10,14 @@
 // System Clock:    -
 
 // Hardware configuration:
-// SPI IP core connected to light-weight Avalon bus
+// GPIO IP core connected to light-weight Avalon bus
 
 //-----------------------------------------------------------------------------
 // Device includes, defines, and assembler directives
 //-----------------------------------------------------------------------------
 
-#ifndef SPI_REGS_H_
-#define SPI_REGS_H_
+#ifndef GPIO_REGS_H_
+#define GPIO_REGS_H_
 
 #define OFS_DATA             0
 #define OFS_STATUS           1
@@ -22,8 +25,9 @@
 #define OFS_BRD              3
 
 
-#define SPAN_IN_BYTES 16
+#define SPAN_IN_BYTES 16  //total number of byes so...4 byes per register * 4 registers = 16 bytes total
 
+#define GPIO_IRQ 80
 
 #endif
 

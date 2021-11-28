@@ -5,13 +5,13 @@
 // Target Platform: DE1-SoC Board
 
 // Hardware configuration:
-// HPS interface:
-//   Mapped to offset of 0x8000 in light-weight MM interface aperature
+//   Mapped to offset of 0 in light-weight MM interface aperature
+//   IRQ80 is used as the interrupt interface to the HPS
 
 //-----------------------------------------------------------------------------
 
-#ifndef SPI_H_
-#define SPI_H_
+#ifndef GPIO_H_
+#define GPIO_H_
 
 #include <stdint.h>
 #include <stdbool.h>

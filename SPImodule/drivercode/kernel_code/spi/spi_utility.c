@@ -1,3 +1,5 @@
+// GPIO IP Example
+// Stop_Go Application (stop_go.c)
 //Abiria Placide
 
 //-----------------------------------------------------------------------------
@@ -18,7 +20,7 @@
 // Initialize Hardware
 void initHw()
 {
-    // Initialize SPI IP
+    // Initialize GPIO IP
     bool ok = spiOpen();
     if(!ok) 
 	{ 
@@ -110,7 +112,7 @@ int main(int argc, char *argv[])
 						printf("setting word size\n");
 						clearControlReg(31); //clears first 5 bits
 						uint32_t x = strtoull(argv[3], NULL, 10);
-						modControlReg(x-1); //sets first 5
+						modControlReg(x); //sets first 5
 					}
 				}
 
@@ -221,7 +223,7 @@ int main(int argc, char *argv[])
 			{
 				if(strcmp(argv[2], "control_bit") == 0)
 				{
-					printf("disabling tx/rx/baudrate\n");
+					printf("enabling tx/rx/baudrate\n");
 					setCtrlEnableBit(0);
 				}
 			}

@@ -1,3 +1,5 @@
+// GPIO IP Example
+// Stop_Go Application (stop_go.c)
 //Abiria Placide
 
 //-----------------------------------------------------------------------------
@@ -37,9 +39,9 @@ int main(int argc, char *argv[])
 	if(argc > 1)
 	{
 		//get command
-
 		if(strcmp(argv[1], "get") == 0)
 		{
+			/*
 			if( argc < 4)
 			{
 				if(strcmp(argv[2], "data") == 0)
@@ -63,6 +65,7 @@ int main(int argc, char *argv[])
 				}
 
 			}
+			*/
 		}
 
 		else if(strcmp(argv[1], "set") == 0)
@@ -112,6 +115,15 @@ int main(int argc, char *argv[])
 						uint32_t x = strtoull(argv[3], NULL, 10);
 						modControlReg(x-1); //sets first 5
 					}
+				}
+
+				else if(strcmp(argv[2], "mcp") == 0)
+				{
+					if(stcmp(argv[3], "dir" ) == 0)
+					{
+						//set direction
+					}
+					//turn on baud clock
 				}
 
 				else
@@ -221,7 +233,7 @@ int main(int argc, char *argv[])
 			{
 				if(strcmp(argv[2], "control_bit") == 0)
 				{
-					printf("disabling tx/rx/baudrate\n");
+					printf("disable tx/rx/baudrate\n");
 					setCtrlEnableBit(0);
 				}
 			}

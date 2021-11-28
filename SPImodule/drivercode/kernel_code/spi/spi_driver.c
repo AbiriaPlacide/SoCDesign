@@ -181,6 +181,19 @@ uint32_t getBaudrateReg(void)
     uint32_t value = ioread32(base+OFS_BRD);
     return value;
 }
+
+bool getRxEmpty(void)
+{
+    uint8_t pin = 2;
+    uint32_t value = ioread32(base+OFS_STATUS);
+    return (value >> pin) & 1;
+}
+
+void setDataReg(uint32_t value)
+{
+	//we dont want a read modify write, so we directly change the value
+     iowrite32(value, base+OFS_DATA);
+}
 //kernal objects
 
 
@@ -205,7 +218,6 @@ static ssize_t showBaudRate(struct kobject *kobj, struct kobj_attribute *attr, c
 }
 
 //baudrate attr
-
 static struct kobj_attribute baudrateAttr = __ATTR(baudrate, 0664, showBaudRate, storeBaudRate);
 
 //word size
@@ -268,8 +280,95 @@ static ssize_t storeCS_Select(struct kobject *kobj, struct kobj_attribute *attr,
 //Chip select Attr
 static struct kobj_attribute cs_selectAttr = __ATTR(cs_select, 0664, showCS_Select, storeCS_Select);
 
+//tx_data
+static uint32_t tx_data = 0;
+module_param(tx_data, int, S_IRUGO);
+MODULE_PARM_DESC(tx_data, "set tx_data");
+
+static ssize_t storeTxData(struct kobject *kobj, struct kobj_attribute *attr, const char *buffer, size_t count)
+{
+	int result = kstrtouint(buffer, 0, &tx_data);
+	if(result == 0)
+	{
+		setDataReg(tx_data);
+	}
+	return count;
+}
+
+static ssize_t showTxData(struct kobject *kobj, struct kobj_attribute *attr, char *buffer)
+{
+	return sprintf(buffer, "%s\n", "NAN");
+}
+//TxData attribute
+static struct kobj_attribute TxDataAttr = __ATTR(tx_data, 0664, showTxData, storeTxData);
+
+
+//rx_data
+static uint32_t rx_data = 0;
+module_param(rx_data, int, S_IRUGO);
+MODULE_PARM_DESC(rx_data, "set rx_data");
+
+static ssize_t storeRxData(struct kobject *kobj, struct kobj_attribute *attr, const char *buffer, size_t count)
+{
+	int result = kstrtouint(buffer, 0, &rx_data);
+	if(result == 0); //do nothing
+	return count;
+}
+
+static ssize_t showRxData(struct kobject *kobj, struct kobj_attribute *attr, char *buffer)
+{
+	bool p = getRxEmpty();
+	if(p)
+	{
+		return sprintf(buffer, "%s\n", "-1");
+	}
+	else
+	{
+		return sprintf(buffer, "%s\n", "Not EMPTY"); //[x]
+	}
+}
+//RxData attribute
+static struct kobj_attribute RxDataAttr = __ATTR(rx_data, 0664, showRxData, storeRxData);
+
 
 /*
+
+//cs_auto
+static uint32_t cs_auto = 0;
+module_param(cs_auto, int, S_IRUGO);
+MODULE_PARM_DESC(cs_auto, "set cs_auto");
+
+static ssize_t storeCS_Auto(struct kobject *kobj, struct kobj_attribute *attr, const char *buffer, size_t count)
+{
+	int t = strncmp(buffer, "true" count-1);
+	int f = strncmp(buffer, "false" count-1);
+	uint32_t value = ioread32(base+OFS_CTRL);
+
+	if(t == 0)
+	{
+		//set cs auto
+	}
+	else if (f == 0)
+	{	
+		//clear cs auto
+	}
+}
+
+static ssize_t showCS_Auto(struct kobject *kobj, struct kobj_attribute *attr, char *buffer)
+{
+	bool p = getRxEmpty();
+	if(p)
+	{
+		return sprintf(buffer, "%s\n", "-1");
+	}
+	else
+	{
+		return sprintf(buffer, "%s\n", "Not EMPTY"); //[x]
+	}
+}
+//RxData attribute
+static struct kobj_attribute RxDataAttr = __ATTR(rx_data, 0664, showRxData, storeRxData);
+
 //mode
 static uint32_t mode = 0;
 module_param(mode, int, S_IRUGO);
@@ -362,7 +461,6 @@ static struct kobject *kobj;
 static int __init initialize_module(void)
 {
 	int result;
-
 	printk(KERN_INFO "SPI driver: starting\n");
 	kobj = kobject_create_and_add("spi", kernel_kobj);
 	if(!kobj)
@@ -377,7 +475,9 @@ static int __init initialize_module(void)
 	result = sysfs_create_file(kobj, &baudrateAttr.attr); //baudrate
 	result = sysfs_create_file(kobj, &wordsizeAttr.attr); //wordSize
 	result = sysfs_create_file(kobj, &cs_selectAttr.attr); //wordSize
-
+	result = sysfs_create_file(kobj, &TxDataAttr.attr); //Txdata
+	result = sysfs_create_file(kobj, &RxDataAttr.attr); //Rxdata
+	
 	//add grouped sysfs files
 
 	base = (unsigned int*)ioremap_nocache(LW_BRIDGE_BASE + SPI_BASE_OFFSET, SPAN_IN_BYTES);
@@ -396,6 +496,8 @@ static void __exit exit_module(void)
 	sysfs_remove_file(kernel_kobj, &baudrateAttr.attr);
 	sysfs_remove_file(kernel_kobj, &wordsizeAttr.attr);
 	sysfs_remove_file(kernel_kobj, &cs_selectAttr.attr);
+	sysfs_remove_file(kernel_kobj, &TxDataAttr.attr);
+	sysfs_remove_file(kernel_kobj, &RxDataAttr.attr);
 	printk(KERN_INFO "SPI driver: exiting");
 }
 

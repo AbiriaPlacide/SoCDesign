@@ -10,6 +10,26 @@ remaining bits are used for integer portion
 configure the module
 
 1) control [4:0] = word size
+3) enable cs auto or manual 
 2) control[15] = enable
 3) brd = 115200 or 9600
 4) set data reg
+
+
+writing to the MCP23S08
+	1) chip select low(automatically done by spi module)
+	2) send address (0x40) of the device in this case. Can be changed by biasing A0, A1 on chip. 
+	3) send register address 0x00-0x0A(11 total registers)
+	4) send the value to register
+	5) pull chip select high
+
+	in total 8*3 bytes 
+
+	turn on LED
+		1) change IODIR reg(0x00) to all outputs. 0 = output, 1= input(default)
+		2) change GPIO reg(0x09)
+
+
+		format
+		IODIR tx pin- 0x40 0x00 0x00 
+		GPIO  tx pin- 0x40 0x09 0x01 

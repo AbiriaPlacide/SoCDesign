@@ -1,11 +1,19 @@
+// GPIO IP Example
+// GPIO IP Library (gpio_ip.c)
+// Jason Losh
+
 //-----------------------------------------------------------------------------
 // Hardware Target
 //-----------------------------------------------------------------------------
 
 // Target Platform: DE1-SoC Board
 
+// Hardware configuration:
+// GPIO Port:
+//   GPIO_1[31-0] is used as a general purpose GPIO port
 // HPS interface:
-//   Mapped to offset of 0x8000 in light-weight MM interface aperature
+//   Mapped to offset of 0 in light-weight MM interface aperature
+//   IRQ80 is used as the interrupt interface to the HPS
 
 //-----------------------------------------------------------------------------
 
@@ -15,7 +23,7 @@
 #include <sys/mman.h>        // mmap
 #include <unistd.h>          // close
 #include "address_map.h"  // address map
-#include "spi_ip.h"         // spi
+#include "spi_ip.h"         // gpio
 #include "spi_regs.h"       // registers
 
 //-----------------------------------------------------------------------------
@@ -27,29 +35,6 @@ uint32_t *base = NULL;
 //-----------------------------------------------------------------------------
 // Subroutines
 //-----------------------------------------------------------------------------
-
-bool spiOpen()
-{
-    // Open /dev/mem
-    int file = open("/dev/mem", O_RDWR | O_SYNC);
-    bool bOK = (file >= 0);
-    if (bOK)
-    {
-        // Create a map from the physical memory location of
-        // /dev/mem at an offset to LW avalon interface
-        // with an aperature of SPAN_IN_BYTES bytes
-        // to any location in the virtual 32-bit memory space of the process
-        base = mmap(NULL, SPAN_IN_BYTES, PROT_READ | PROT_WRITE, MAP_SHARED,
-                    file, LW_BRIDGE_BASE + SPI_BASE_OFFSET);
-        bOK = (base != MAP_FAILED);
-
-        // Close /dev/mem
-        close(file);
-    }
-    return bOK;
-}
-
-
 uint32_t getDataReg()
 {
     uint32_t value = *(base+OFS_DATA);
@@ -152,10 +137,10 @@ void setStatusReg(uint32_t value)
 	*(base+OFS_STATUS) = value;
 }
 
-void setBaudrateReg(uint32_t value) 
+void setBaudrateReg(uint32_t value) //remember to change func arguments to convert frequency to brd value
 {
-	uint32_t res = 25000000/value;
-     *(base+OFS_BRD) = res << 7;
+    //should be frequency converted to brd value. change later
+     *(base+OFS_BRD) = value;
 }
 
 //enable transmit/receiver/brd

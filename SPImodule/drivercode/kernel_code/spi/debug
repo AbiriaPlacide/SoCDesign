@@ -1,0 +1,4 @@
+make -C /lib/modules/3.18.0/build M=/home/root/tutorial_files/spi_code/kernel_modules modules
+make[1]: Entering directory `/usr/src/3.18.0'
+  CC [M]  /home/root/tutorial_files/spi_code/kernel_modules/spi_driver.o
+make[1]: Leaving directory `/usr/src/3.18.0'
