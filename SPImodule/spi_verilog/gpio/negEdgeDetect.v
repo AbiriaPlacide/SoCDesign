@@ -1,4 +1,4 @@
-module edgeDetect(input clk, input reset, input signal, input chipselect, output out_pulse);
+module negEdgeDetect(input clk, input reset, input signal, output out_pulse);
 	 //posedge detector
 	 reg old_signal;
 	 always @(posedge clk)
@@ -9,6 +9,6 @@ module edgeDetect(input clk, input reset, input signal, input chipselect, output
 			old_signal <= signal;
 	 end
 	 
-	 assign out_pulse = signal & ~old_signal;
+	 assign out_pulse = ~signal & old_signal;
 
 endmodule

@@ -9,7 +9,7 @@ module baudratedivider (enable, clock, reset, N, Nout, count, target);
     
     wire SOURCE_CLK = enable && clock; //& or &&
     
-    always @ (posedge SOURCE_CLK, posedge reset)
+    always @ (posedge SOURCE_CLK)
     begin
         if (reset)
         begin

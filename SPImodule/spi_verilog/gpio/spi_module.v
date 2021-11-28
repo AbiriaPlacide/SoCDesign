@@ -52,7 +52,7 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
     output reg baudrate; //GPIO_0[1]   Waveform Dx
     output reg spi_tx;   //GPIO_0[7]   Waveform D0
     output reg spi_clk;  //GPIO_0[11]  Waveform D2
-    output reg spi_cs0;  //GPIO_0[13]  Waveform D3
+    output reg spi_cs0;  //GPIO_0[13]  Waveform D	x3
     output reg spi_cs1;  //GPIO_0[15]  Waveform D4
     output reg spi_cs2;  //GPIO_0[17]  Waveform D5
     output reg spi_cs3;  //GPIO_0[19]  Waveform D6
@@ -171,9 +171,11 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 	//edge detect logic
 	 wire read_pulse_clk;
 	 wire write_pulse_clk;
-	 edgeDetect readBlock(.clk(clk), .reset(reset), .signal(read), .chipselect(chipselect), .out_pulse(read_pulse_clk));
-	 edgeDetect writeBlock(.clk(clk), .reset(reset), .signal(write), .chipselect(chipselect), .out_pulse(write_pulse_clk));
-
+	 wire neg_spi_clk;
+	 
+	 edgeDetect readBlock(.clk(clk), .reset(reset), .signal(read), .out_pulse(read_pulse_clk));
+	 edgeDetect writeBlock(.clk(clk), .reset(reset), .signal(write),.out_pulse(write_pulse_clk));
+	 negEdgeDetect negEdgeSPI(.clk(clk), .reset(reset), .signal(spi_clk), .out_pulse(neg_spi_clk));
 	
 	 //Transmit FIFO
     reg [31:0] data_temp2 = 32'b11001110; //for testing purposes only
@@ -207,7 +209,6 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 	  //counter block
 	 
 	 reg [4:0] COUNT;
-	 
 	 always @(posedge spi_clk)
 	 begin
 		if(reset)
@@ -241,7 +242,7 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 	 
 	//functional block that will output cs output
 	//enable control
-	 always @(posedge spi_clk)
+	 always @(posedge clk)
 	 begin
 		case(State)
 			IDLE:
@@ -251,7 +252,7 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 				spi_cs1 <= 1'b1;
 				spi_cs2 <= 1'b1;
 				spi_cs3 <= 1'b1;
-			
+				
 				if(TXFE)
 				begin
 					nextState <= IDLE;
@@ -319,7 +320,7 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 	 end
 
 	 //transmit logic to spi_tx pin
-	 always @(negedge spi_clk)
+	 always @(posedge spi_clk)
 	 begin
 		 //read done is always 0 unless count == 0;
 	 	 READ_DONE <= 1'b0;

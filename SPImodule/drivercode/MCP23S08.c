@@ -77,7 +77,9 @@ int main(int argc, char *argv[])
 
 					uint32_t x = strtoull(argv[3], NULL, 16);
 					printf("setting data reg: %08x \n", x);
+					setCtrlEnableBit(0);
 					setDataReg(x);
+					setCtrlEnableBit(1);
 				}
 
 				else if(strcmp(argv[2], "status") == 0)
@@ -119,7 +121,7 @@ int main(int argc, char *argv[])
 
 				else if(strcmp(argv[2], "mcp") == 0)
 				{
-					if(stcmp(argv[3], "dir" ) == 0)
+					if(strcmp(argv[3], "dir" ) == 0)
 					{
 						//set direction
 					}
