@@ -148,10 +148,31 @@ void setCtrlEnableBit(bool bit)
 
 */ 
 
+
+
 uint32_t getControlReg(void)
 {
     uint32_t value = ioread32(base+OFS_CTRL);
     return value;
+}
+
+void setCtrlEnableBit(bool bit)
+{
+    //this will turn on transmitter/receiver/brd
+
+	uint32_t value = getControlReg();
+
+	if(bit)
+	{
+		value |= (1 << 15);
+		iowrite32( value, (base+OFS_CTRL));
+	}
+	else
+	{
+		value &= ~(1 << 15);
+		iowrite32(value, base+OFS_CTRL);
+	}
+
 }
 
 void setControlReg(uint32_t value)
@@ -174,6 +195,7 @@ void clearControlReg(uint32_t value)
 void setBaudrateReg(uint32_t value)
 {
      iowrite32(value, (base+OFS_BRD)); 
+	 setCtrlEnableBit(1); //also enable brd to be outputed
 }
 
 uint32_t getBaudrateReg(void)
@@ -331,145 +353,518 @@ static ssize_t showRxData(struct kobject *kobj, struct kobj_attribute *attr, cha
 static struct kobj_attribute RxDataAttr = __ATTR(rx_data, 0664, showRxData, storeRxData);
 
 
-/*
-
-//cs_auto
-static uint32_t cs_auto = 0;
-module_param(cs_auto, int, S_IRUGO);
-MODULE_PARM_DESC(cs_auto, "set cs_auto");
-
-static ssize_t storeCS_Auto(struct kobject *kobj, struct kobj_attribute *attr, const char *buffer, size_t count)
-{
-	int t = strncmp(buffer, "true" count-1);
-	int f = strncmp(buffer, "false" count-1);
-	uint32_t value = ioread32(base+OFS_CTRL);
-
-	if(t == 0)
-	{
-		//set cs auto
-	}
-	else if (f == 0)
-	{	
-		//clear cs auto
-	}
-}
-
-static ssize_t showCS_Auto(struct kobject *kobj, struct kobj_attribute *attr, char *buffer)
-{
-	bool p = getRxEmpty();
-	if(p)
-	{
-		return sprintf(buffer, "%s\n", "-1");
-	}
-	else
-	{
-		return sprintf(buffer, "%s\n", "Not EMPTY"); //[x]
-	}
-}
-//RxData attribute
-static struct kobj_attribute RxDataAttr = __ATTR(rx_data, 0664, showRxData, storeRxData);
-
-//mode
+//dev 0
+//dev0 mode
 static uint32_t mode = 0;
 module_param(mode, int, S_IRUGO);
 MODULE_PARM_DESC(mode, "set mode");
-static ssize_t showMode(struct kobject *kobj, struct kobj_attribute *attr, const char *buffer, size_t count)
+
+static ssize_t dev0showMode(struct kobject *kobj, struct kobj_attribute *attr, char *buffer)
 {
 	mode = getControlReg();
+	mode = (mode >> 16) & 0x3;
 
-	if(strncmp(buffer, "mode0", count-1) == 0)
-	{
-		mode = (mode >> 16) & 0x2;
-		//show mode 0
-		sprintf(buffer, "%u\n", mode);
-	}
-
-	else if(strncmp(buffer, "mode1", count-1) == 0)
-	{
-		mode = (mode >> 18) & 0x2;
-		//show mode 1
-		sprintf(buffer, "%u\n", mode);
-	}
-
-	else if(strncmp(buffer, "mode2", count-1) == 0)
-	{
-		mode = (mode >> 20) & 0x2;
-		//show mode 2
-		sprintf(buffer, "%u\n", mode);
-	}
-
-	else if(strncmp(buffer, "mode3", count-1) == 0)
-	{
-		mode = (mode >> 22) & 0x2;
-		//show mode 3
-		sprintf(buffer, "%u\n", mode);
-	}
+	return sprintf(buffer, "%u\n", mode);
 }
 
-static ssize_t storeMode(struct kobject *kobj, struct kobj_attribute *attr, const char *buffer, size_t count)
+static ssize_t dev0storeMode(struct kobject *kobj, struct kobj_attribute *attr, const char *buffer, size_t count)
 {
 	int result = kstrtouint(buffer, 0, &mode);
 	unsigned int value = getControlReg();
 
 	if(result == 0)
 	{
-		if(mode == 0)
-		{
-			value &= ~(3 << 16);
-			iowrite32(value, (base+OFS_CTRL));
-		}
+		value &= ~(3 << 16); //clear
+		value |= (mode << 16); //set
+		iowrite32(value, (base+OFS_CTRL));
+	}
 
-		if(mode == 1)
-		{
-			value &= ~(3 << 18);
-			value |= (1 << 18);
-			iowrite32(value, (base+OFS_CTRL));
-		}
-		if(mode == 2)
-		{
-			value &= ~(3 << 20);
-			value |= (2 << 20);
-			iowrite32(value, (base+OFS_CTRL));
-		}
-		if(mode == 3)
-		{
-			value &= ~(3 << 22);
-			value |= (3 << 22);
-			iowrite32(value, (base+OFS_CTRL));
-		}
+	return count;
+}
+//attributes
+static struct kobj_attribute mode0Attr = __ATTR(mode, 0664, dev0showMode, dev0storeMode);
+
+
+//dev0 cs_enable
+static uint32_t cs_enable = 0;
+module_param(cs_enable, int, S_IRUGO);
+MODULE_PARM_DESC(cs_enable, "set cs_auto");
+static ssize_t dev0showcs_enable(struct kobject *kobj, struct kobj_attribute *attr, char *buffer)
+{
+	cs_enable = getControlReg();
+	cs_enable = (cs_enable >> 9) & 0x1;
+
+	if(cs_enable)
+	{
+		strcpy(buffer, "true\n");
+	}
+
+	else if(!cs_enable)
+	{
+		strcpy(buffer, "false\n");
+	}
+
+	return strlen(buffer);
+	
+}
+
+static ssize_t dev0storecs_enable(struct kobject *kobj, struct kobj_attribute *attr, const char *buffer, size_t count)
+{
+	unsigned int value = getControlReg();
+
+	if(strncmp(buffer, "true", count-1) == 0)
+	{
+		value |= (1 << 9); //set
+		iowrite32(value, (base+OFS_CTRL));
+	}
+
+	else if(strncmp(buffer, "false", count-1) == 0)
+	{
+		value &= ~(1 << 9); //clear
+		iowrite32(value, (base+OFS_CTRL));
+	}
+	return count;
+}
+
+static struct kobj_attribute cs_enable0Attr = __ATTR(cs_enable, 0664, dev0showcs_enable, dev0storecs_enable);
+
+//dev0 cs_auto
+static uint32_t cs_auto = 0;
+module_param(cs_auto, int, S_IRUGO);
+MODULE_PARM_DESC(cs_auto, "set cs_auto");
+static ssize_t dev0showcs_auto(struct kobject *kobj, struct kobj_attribute *attr, char *buffer)
+{
+	cs_auto = getControlReg();
+	cs_auto = (cs_auto >> 5) & 0x1;
+
+	if(cs_auto)
+	{
+		strcpy(buffer, "true\n");
+	}
+
+	else if(!cs_auto)
+	{
+		strcpy(buffer, "false\n");
+	}
+
+	return strlen(buffer);
+}
+
+static ssize_t dev0storecs_auto(struct kobject *kobj, struct kobj_attribute *attr, const char *buffer, size_t count)
+{
+	unsigned int value = getControlReg();
+
+	if(strncmp(buffer, "true", count-1) == 0)
+	{
+		value |= (1 << 5); //set
+		iowrite32(value, (base+OFS_CTRL));
+
+	}
+	else if(strncmp(buffer, "false", count-1)== 0)
+	{
+		value &= ~(1 << 5); //clear
+		iowrite32(value, (base+OFS_CTRL));
 	}
 
 	return count;
 }
 
-static struct kobj_attribute modeAttr = __ATTR(mode, 0664, showMode, StoreMode);
+static struct kobj_attribute cs_auto0Attr = __ATTR(cs_auto, 0664, dev0showcs_auto, dev0storecs_auto);
 
+//Dev 1
 
-
-static struct attribute *attrs0[] = {&modeAttr.attr, NULL};
-static struct attribute_group group0 = 
+static ssize_t dev1showMode(struct kobject *kobj, struct kobj_attribute *attr, char *buffer)
 {
-	.name = "device";
-	.attrs = attrs0;
+	mode = getControlReg();
+	mode = (mode >> 18) & 0x3;
+
+	return sprintf(buffer, "%u\n", mode);
 }
 
-*/
+static ssize_t dev1storeMode(struct kobject *kobj, struct kobj_attribute *attr, const char *buffer, size_t count)
+{
+	int result = kstrtouint(buffer, 0, &mode);
+	unsigned int value = getControlReg();
+
+	if(result == 0)
+	{
+		value &= ~(3 << 18); //clear
+		value |= (mode << 18); //set
+		iowrite32(value, (base+OFS_CTRL));
+	}
+	return count;
+}
+
+static struct kobj_attribute mode1Attr = __ATTR(mode, 0664, dev1showMode, dev1storeMode);
+
+static ssize_t dev1showcs_enable(struct kobject *kobj, struct kobj_attribute *attr, char *buffer)
+{
+	cs_enable = getControlReg();
+	cs_enable = (cs_enable >> 10) & 0x1;
+
+	if(cs_enable)
+	{
+		strcpy(buffer, "true\n");
+	}
+
+	else if(!cs_enable)
+	{
+		strcpy(buffer, "false\n");
+	}
+
+	return strlen(buffer);
+}
+
+static ssize_t dev1storecs_enable(struct kobject *kobj, struct kobj_attribute *attr, const char *buffer, size_t count)
+{
+	unsigned int value = getControlReg();
+
+	if(strncmp(buffer, "true", count-1) == 0)
+	{
+		value |= (1 << 10); //set
+		iowrite32(value, (base+OFS_CTRL));
+	}
+
+	else if(strncmp(buffer, "false", count-1) == 0)
+	{
+		value &= ~(1 << 10); //clear
+		iowrite32(value, (base+OFS_CTRL));	
+	}
+
+	return count;
+}
+
+static struct kobj_attribute cs_enable1Attr = __ATTR(cs_enable, 0664, dev1showcs_enable, dev1storecs_enable);
+
+//Dev 1 CS auto
+static ssize_t dev1showcs_auto(struct kobject *kobj, struct kobj_attribute *attr, char *buffer)
+{
+	cs_auto = getControlReg();
+	cs_auto = (cs_auto >> 6) & 0x1;
+
+	if(cs_auto)
+	{
+		strcpy(buffer, "true\n");
+	}
+
+	else if(!cs_auto)
+	{
+		strcpy(buffer, "false\n");
+	}
+
+
+	return strlen(buffer);
+}
+
+static ssize_t dev1storecs_auto(struct kobject *kobj, struct kobj_attribute *attr, const char *buffer, size_t count)
+{
+	unsigned int value = getControlReg();
+
+
+	if(strncmp(buffer, "true", count-1) == 0)
+	{
+		value |= (1 << 6); //set
+		iowrite32(value, (base+OFS_CTRL));
+	}
+
+	else if(strncmp(buffer, "false", count-1) == 0)
+	{
+		value &= ~(1 << 6); //clear
+		iowrite32(value, (base+OFS_CTRL));
+	}
+	return count;
+}
+
+static struct kobj_attribute cs_auto1Attr = __ATTR(cs_auto, 0664, dev1showcs_auto, dev1storecs_auto);
+
+//DEV 2 mode
+
+static ssize_t dev2showMode(struct kobject *kobj, struct kobj_attribute *attr, char *buffer)
+{
+	mode = getControlReg();
+	mode = (mode >> 20) & 0x3;
+
+	return sprintf(buffer, "%u\n", mode);
+}
+
+static ssize_t dev2storeMode(struct kobject *kobj, struct kobj_attribute *attr, const char *buffer, size_t count)
+{
+	int result = kstrtouint(buffer, 0, &mode);
+	unsigned int value = getControlReg();
+
+	if(result == 0)
+	{
+		value &= ~(3 << 20); //clear
+		value |= (mode << 20); //set
+		iowrite32(value, (base+OFS_CTRL));
+	}
+	return count;
+}
+
+static struct kobj_attribute mode2Attr = __ATTR(mode, 0664, dev2showMode, dev2storeMode);
+
+
+//DEV 2 cs_enable
+static ssize_t dev2showcs_enable(struct kobject *kobj, struct kobj_attribute *attr, char *buffer)
+{
+	cs_enable = getControlReg();
+	cs_enable = (cs_enable >> 11) & 0x1;
+
+	if(cs_enable)
+	{
+		strcpy(buffer, "true\n");
+	}
+
+	else if(!cs_enable)
+	{
+		strcpy(buffer, "false\n");
+	}
+
+	return strlen(buffer);
+}
+
+static ssize_t dev2storecs_enable(struct kobject *kobj, struct kobj_attribute *attr, const char *buffer, size_t count)
+{
+	unsigned int value = getControlReg();
+
+	if(strncmp(buffer, "true", count-1) == 0)
+	{
+		value |= (1 << 11); //set
+		iowrite32(value, (base+OFS_CTRL));
+
+	}
+
+	else if(strncmp(buffer, "false", count-1) == 0)
+	{
+		value &= ~(1 << 11); //clear
+		iowrite32(value, (base+OFS_CTRL));
+	}
+
+	return count;
+}
+
+static struct kobj_attribute cs_enable2Attr = __ATTR(cs_enable, 0664, dev2showcs_enable, dev2storecs_enable);
+
+
+//Dev 2 CS auto
+static ssize_t dev2showcs_auto(struct kobject *kobj, struct kobj_attribute *attr, char *buffer)
+{
+	cs_auto = getControlReg();
+	cs_auto = (cs_auto >> 7) & 0x1;
+
+	if(cs_auto)
+	{
+		strcpy(buffer, "true\n");
+	}
+
+	else if(!cs_auto)
+	{
+		strcpy(buffer, "false\n");
+	}
+
+	return strlen(buffer);
+}
+
+static ssize_t dev2storecs_auto(struct kobject *kobj, struct kobj_attribute *attr, const char *buffer, size_t count)
+{
+	unsigned int value = getControlReg();
+
+	if(strncmp(buffer, "true", count-1) == 0)
+	{
+		value |= (1 << 7); //set
+		iowrite32(value, (base+OFS_CTRL));
+	}
+
+	else if(strncmp(buffer, "false", count-1) == 0)
+	{
+		value &= ~(1 << 7); //clear
+		iowrite32(value, (base+OFS_CTRL));
+	}
+
+	return count;
+}
+
+static struct kobj_attribute cs_auto2Attr = __ATTR(cs_auto, 0664, dev2showcs_auto, dev2storecs_auto);
+
+
+//DEV 3 mode
+static ssize_t dev3showMode(struct kobject *kobj, struct kobj_attribute *attr, char *buffer)
+{
+	mode = getControlReg();
+	mode = (mode >> 22) & 0x3;
+
+	return sprintf(buffer, "%u\n", mode);
+}
+
+static ssize_t dev3storeMode(struct kobject *kobj, struct kobj_attribute *attr, const char *buffer, size_t count)
+{
+	int result = kstrtouint(buffer, 0, &mode);
+	unsigned int value = getControlReg();
+
+	if(result == 0)
+	{
+		value &= ~(3 << 22); //clear
+		value |= (mode << 22); //set
+		iowrite32(value, (base+OFS_CTRL));
+	}
+	return count;
+}
+
+static struct kobj_attribute mode3Attr = __ATTR(mode, 0664, dev3showMode, dev3storeMode);
+
+//DEV 3 cs_enable
+static ssize_t dev3showcs_enable(struct kobject *kobj, struct kobj_attribute *attr, char *buffer)
+{
+	cs_enable = getControlReg();
+	cs_enable = (cs_enable >> 12) & 0x1;
+
+	if(cs_enable)
+	{
+		strcpy(buffer, "true\n");
+	}
+
+	else if(!cs_enable)
+	{
+		strcpy(buffer, "false\n");
+	}
+
+	return strlen(buffer);
+}
+
+static ssize_t dev3storecs_enable(struct kobject *kobj, struct kobj_attribute *attr, const char *buffer, size_t count)
+{
+	unsigned int value = getControlReg();
+
+	if( strncmp(buffer, "true", count-1) == 0)
+	{
+		value |=  (1 << 12); //set
+		iowrite32(value, (base+OFS_CTRL));
+	
+	}
+
+	else if(strncmp(buffer, "false", count-1) == 0)
+	{
+		value &= ~(1 << 12); //clear
+		iowrite32(value, (base+OFS_CTRL));
+	}
+	return count;
+}
+
+static struct kobj_attribute cs_enable3Attr = __ATTR(cs_enable, 0664, dev3showcs_enable, dev3storecs_enable);
+
+
+//Dev 3 CS auto
+static ssize_t dev3showcs_auto(struct kobject *kobj, struct kobj_attribute *attr, char *buffer)
+{
+	cs_auto = getControlReg();
+	cs_auto = (cs_auto >> 8) & 0x1;
+
+	if(cs_auto)
+	{
+		strcpy(buffer, "true\n");
+	}
+
+	else if(!cs_auto)
+	{
+		strcpy(buffer, "false\n");
+	}
+	return strlen(buffer);
+}
+
+static ssize_t dev3storecs_auto(struct kobject *kobj, struct kobj_attribute *attr, const char *buffer, size_t count)
+{
+	unsigned int value = getControlReg();
+
+	if( strncmp(buffer, "true", count-1) == 0)
+	{
+		value |= (1 << 8); //set
+		iowrite32(value, (base+OFS_CTRL));
+	}
+
+	else if(strncmp(buffer, "false", count-1) == 0)
+	{
+		value &= ~(1 << 8); //clear
+		iowrite32(value, (base+OFS_CTRL));
+	}
+
+	return count;
+}
+
+static struct kobj_attribute cs_auto3Attr = __ATTR(cs_auto, 0664, dev3showcs_auto, dev3storecs_auto);
+
+
+static struct attribute *attrs0[] = { &mode0Attr.attr, &cs_auto0Attr.attr, &cs_enable0Attr.attr, NULL};
+static struct attribute *attrs1[] = { &mode1Attr.attr, &cs_auto1Attr.attr, &cs_enable1Attr.attr, NULL};
+static struct attribute *attrs2[] = { &mode2Attr.attr, &cs_auto2Attr.attr, &cs_enable2Attr.attr, NULL};
+static struct attribute *attrs3[] = { &mode3Attr.attr, &cs_auto3Attr.attr, &cs_enable3Attr.attr, NULL};
+
+static struct attribute_group group0 = 
+{
+	.name = "device0",
+	.attrs = attrs0
+};
+
+static struct attribute_group group1 =
+{
+	.name = "device1",
+	.attrs = attrs1
+};
+
+static struct attribute_group group2 =
+{
+	.name = "device2",
+	.attrs = attrs2
+};
+
+static struct attribute_group group3 =
+{
+	.name = "device3",
+	.attrs = attrs3
+};
 
 
 static struct kobject *kobj;
+
 //init kernel moduel
 static int __init initialize_module(void)
 {
 	int result;
 	printk(KERN_INFO "SPI driver: starting\n");
 	kobj = kobject_create_and_add("spi", kernel_kobj);
+	
 	if(!kobj)
 	{
 		printk(KERN_ALERT "SPI driver: failed to create and add kobj\n");
 		return -ENOENT;
 	}
 
-//	result = sysfs_create_group(kobj, &group0);
+	result = sysfs_create_group(kobj, &group0);
+
+	if(result != 0)
+	{
+		return result;
+	}
+
+	result = sysfs_create_group(kobj, &group1);
+
+	if(result != 0)
+	{
+		return result;
+	}
+
+	result = sysfs_create_group(kobj, &group2);
+
+	if(result != 0)
+	{
+		return result;
+	}
+
+	result = sysfs_create_group(kobj, &group3);
+
+	if(result != 0)
+	{
+		return result;
+	}
 
 	//add single sysfs files
 	result = sysfs_create_file(kobj, &baudrateAttr.attr); //baudrate
