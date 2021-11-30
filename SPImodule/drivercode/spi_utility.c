@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
 				{
 					uint32_t x = strtoull(argv[3], NULL, 16);
 					printf("setting control reg with %u\n", x);
-					setControlReg(atoi(argv[3]));
+					setControlReg(x);
 				}
 
 				else if(strcmp(argv[2], "brd") == 0)
@@ -96,6 +96,7 @@ int main(int argc, char *argv[])
 					uint32_t x = strtoull(argv[3], NULL, 10);
 					printf("setting baud reg with %u\n", x);
 					setBaudrateReg(x);
+					setCtrlEnableBit(1); //allows signal to be generated
 				}
 
 				else if(strcmp(argv[2], "word_size") == 0)
