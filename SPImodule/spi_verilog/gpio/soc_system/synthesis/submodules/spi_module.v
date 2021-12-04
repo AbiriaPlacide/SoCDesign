@@ -5,26 +5,32 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 
 	 //signals for the control regiser
     wire [4:0] WORD_SIZE  = control[4:0];
-    wire CS0_AUTO         = control[5];
+    
+	 wire CS0_AUTO         = control[5];
     wire CS1_AUTO         = control[6];
     wire CS2_AUTO         = control[7];
     wire CS3_AUTO         = control[8];
-	 assign CS_AUTO = {CS3_AUTO, CS2_AUTO, CS1_AUTO, CS0_AUTO};
+	 
+	 wire CS_AUTO = (CS3_AUTO | CS2_AUTO | CS1_AUTO | CS0_AUTO);
 	 
     wire CS0_ENABLE       = control[9];
     wire CS1_ENABLE       = control[10];
     wire CS2_ENABLE       = control[11];
     wire CS3_ENABLE       = control[12];
-	 assign CS_ENABLE = {CS3_ENABLE, CS2_ENABLE, CS1_ENABLE, CS0_ENABLE};
+	 
+	 wire CS_ENABLE = (CS3_ENABLE | CS2_ENABLE | CS1_ENABLE | CS0_ENABLE);
     
 	 wire [1:0]CS_SELECT   = control[14:13];
-    wire ENABLE           = control[15];
+  
+	 wire ENABLE           = control[15];
     wire [1:0] MODE0      = control[17:16];
     wire [1:0] MODE1      = control[19:18];
     wire [1:0] MODE2      = control[21:20];
     wire [1:0] MODE3      = control[23:22];
-	 assign MODE = {MODE3, MODE2, MODE1, MODE0};
-    wire [7:0] DEBUG_OUT  = control[31:24];
+	 
+	// wire MODE[3:0] = MODE = {MODE3, MODE2, MODE1, MODE0};
+    
+	 wire [7:0] DEBUG_OUT  = control[31:24];
 	 //end of control reg signals
 	 
 	 wire [3:0] readptr;
@@ -56,7 +62,7 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
     output reg spi_cs1;  //GPIO_0[15]  Waveform D4
     output reg spi_cs2;  //GPIO_0[17]  Waveform D5
     output reg spi_cs3;  //GPIO_0[19]  Waveform D6
-    
+	 
     //spi input pins
     input      spi_rx;   //GPIO_0[9] Waveform D1
     
@@ -202,8 +208,6 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 	 wire LOAD, DECREMENT;//, READ_DONE;
 	 assign LOAD = (State == IDLE);
 	 assign DECREMENT = (State == TX_RX) && (~spi_clk); //update count on the negedge of spi_clk= baud_out
-	 //assign READ_DONE = (State == TX_RX) && (COUNT==0);
-	
 	 reg READ_DONE;
 
 	  //counter block
@@ -227,7 +231,6 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 	 parameter CS_ASSERT = 4'b1011; //11 0xB
 	 parameter TX_RX     = 4'b1100; //12 0xC
 	
-	
 	 reg [3:0] State;
 	 reg [3:0] nextState;
 	
@@ -244,27 +247,74 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 	//enable control
 	 always @(posedge clk)
 	 begin
+	 	//defaults
+	 	
 		case(State)
 			IDLE:
 			begin
-				//if in idle, cs idles high
-				spi_cs0 <= 1'b1;
-				spi_cs1 <= 1'b1;
-				spi_cs2 <= 1'b1;
-				spi_cs3 <= 1'b1;
+				//if in idle, cs idles high, in automatic mode
+				if(CS_AUTO)
+				begin
+					if(CS0_AUTO)				
+						spi_cs0 <= 1'b1;
+					if(CS1_AUTO)
+						spi_cs1 <= 1'b1;
+					if(CS2_AUTO)
+						spi_cs2 <= 1'b1;
+					if(CS3_AUTO)
+						spi_cs3 <= 1'b1;
+					if(!TXFE)
+					begin					
+						nextState <= CS_ASSERT;
+					end
+				end
+				
+				if(!TXFE && !(CS_AUTO)) //if CS_ENABLE, then we know its in manual mode
+				begin	
+					if(CS0_ENABLE)
+					begin
+						spi_cs0 <= 1'b0;
+					end
+					
+					if(CS1_ENABLE)
+					begin
+						spi_cs1 <= 1'b0;
+					end
+					
+					if(CS2_ENABLE)
+					begin
+						spi_cs2 <= 1'b0;
+					end
+					
+					if(CS3_ENABLE)
+					begin
+						spi_cs3 <= 1'b0;
+					end
+						
+					nextState <= TX_RX;
+				end
+				
+				if(!CS0_ENABLE)
+				begin
+					spi_cs0 <= 1'b1;
+				end
+				if(!CS1_ENABLE)
+				begin
+					spi_cs1 <= 1'b1;
+				end				
+				if(!CS2_ENABLE)
+				begin
+					spi_cs2 <= 1'b1;
+				end
+				if(!CS3_ENABLE)
+				begin
+					spi_cs3 <= 1'b1;
+				end
 				
 				if(TXFE)
 				begin
 					nextState <= IDLE;
 				end
-				
-				else if(!TXFE && !CS_AUTO) //if CS_ENABLE, then we know its in manual mode
-				begin	
-					nextState <= TX_RX;
-				end
-				
-				else //automatic mode
-					nextState <= CS_ASSERT;
 			end
 			
 			TX_RX:
@@ -276,17 +326,7 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 				end
 				else
 				begin
-					if(CS0_ENABLE)
-						spi_cs0 <= 1'b0;
-					if(CS1_ENABLE)
-						spi_cs1 <= 1'b0;
-					if(CS2_ENABLE)
-						spi_cs2 <= 1'b0;
-					if(CS3_ENABLE)
-						spi_cs3 <= 1'b0;
-						
 					nextState <= TX_RX;
-					
 				end
 			end
 			
