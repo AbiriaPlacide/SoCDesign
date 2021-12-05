@@ -20,13 +20,14 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 	 
 	 wire CS_ENABLE = (CS3_ENABLE | CS2_ENABLE | CS1_ENABLE | CS0_ENABLE);
     
-	 wire [1:0]CS_SELECT   = control[14:13];
+	 wire [1:0] CS_SELECT   = control[14:13];
   
-	 wire ENABLE           = control[15];
-    wire [1:0] MODE0      = control[17:16];
-    wire [1:0] MODE1      = control[19:18];
-    wire [1:0] MODE2      = control[21:20];
-    wire [1:0] MODE3      = control[23:22];
+	 wire ENABLE            = control[15];
+    
+	 wire [1:0] MODE0       = control[17:16];
+    wire [1:0] MODE1       = control[19:18];
+    wire [1:0] MODE2       = control[21:20];
+    wire [1:0] MODE3       = control[23:22];
 	 
 	// wire MODE[3:0] = MODE = {MODE3, MODE2, MODE1, MODE0};
     
@@ -57,14 +58,18 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
     //spi output pins
     output reg baudrate; //GPIO_0[1]   Waveform Dx
     output reg spi_tx;   //GPIO_0[7]   Waveform D0
-    output reg spi_clk;  //GPIO_0[11]  Waveform D2
-    output reg spi_cs0;  //GPIO_0[13]  Waveform D	x3
+   
+	input      spi_rx;   //GPIO_0[9] 	Waveform D1
+	 
+    output wire spi_clk;  //GPIO_0[11]  Waveform D2
+    output reg spi_cs0;  //GPIO_0[13]  Waveform D3
     output reg spi_cs1;  //GPIO_0[15]  Waveform D4
     output reg spi_cs2;  //GPIO_0[17]  Waveform D5
     output reg spi_cs3;  //GPIO_0[19]  Waveform D6
 	 
+	 
     //spi input pins
-    input      spi_rx;   //GPIO_0[9] Waveform D1
+
     
     // internal registers
     reg [31:0] data; //gpio interface for spi ( TX,RX, , CSn)
@@ -171,7 +176,8 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 	 
 	
 	//BAUD OUT CLK.
-	 baudratedivider baud_out(.clock(clk), .enable(control[15]), .reset(reset), .N(brd[31:0]), .Nout(spi_clk));
+	 reg  bard;
+	 baudratedivider baud_out(.clock(clk), .enable(control[15]), .reset(reset), .N(brd[31:0]), .Nout(bard), .State(State), .idle_mode(idle_mode));
 	
 	
 	//edge detect logic
@@ -269,7 +275,7 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 					end
 				end
 				
-				if(!TXFE && !(CS_AUTO)) //if CS_ENABLE, then we know its in manual mode
+				if(!TXFE && !(CS_AUTO)) //if CS_ENABLE, then we know its in manual mode, check which cs to pull low
 				begin	
 					if(CS0_ENABLE)
 					begin
@@ -294,6 +300,7 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 					nextState <= TX_RX;
 				end
 				
+				//if cs manual is reset, pull cs high
 				if(!CS0_ENABLE)
 				begin
 					spi_cs0 <= 1'b1;
@@ -367,17 +374,64 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 		 
 		 if(State == TX_RX)
 		 begin
-			spi_tx <= data_temp[COUNT];// if not +1, that last bit is lost
+			spi_tx <= data_temp[COUNT];
 			
 			if(COUNT == 1'b0)
 			begin
 				READ_DONE <= 1'b1;
-				spi_tx <= data_temp[0];
+				spi_tx <= data_temp[0]; //transmit last bit
 			end
 		 end
 		 else
 			spi_tx <= 0;
 	 end
+	 
+
+	 
+	 //modes, phase & polarity for each device
+	 parameter DEV0 = 2'b00;
+	 parameter DEV1 = 2'b01;
+	 parameter DEV2 = 2'b10;
+	 parameter DEV3 = 2'b11;
+	 
+	 reg sPhase = 0;
+	 reg sPolarity = 0;
+	 
+	 always @(*)
+	 begin
+		case(CS_SELECT)
+			DEV0:
+			begin
+				sPolarity = MODE0[1];
+				sPhase = MODE0[0];
+			end
+			DEV1:
+			begin
+				sPolarity = MODE1[1];
+				sPhase = MODE1[0];
+			end
+			
+			DEV2:
+			begin
+				sPolarity = MODE2[1];
+				sPhase = MODE2[0];
+			end
+			
+			DEV3:
+			begin
+				sPolarity = MODE3[1];
+				sPhase = MODE3[0];
+			end
+		endcase
+	 
+	 end
+	 
+	 //control idle high or idle low
+	
+	 wire idle_mode;
+	 assign idle_mode = (sPolarity == 1'b1); //checks if idle high,
+	 
+	 assign spi_clk = (bard);
 	 
 	 //hex out for read ptr and write ptr and status bits for debugging
 	 binary2seven hex0(.BIN(readptr), .SEV(HEX1)); //read ptr

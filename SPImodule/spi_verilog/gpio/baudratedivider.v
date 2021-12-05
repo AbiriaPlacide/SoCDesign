@@ -1,19 +1,22 @@
 // Divide by N clock generator
-module baudratedivider (enable, clock, reset, N, Nout, count, target);
+module baudratedivider (enable, clock, reset, N, Nout, count, target, State, idle_mode);
     input clock, reset;
     input [31:0] N;
     input enable;
+	 input [3:0] State;
+	 input idle_mode;
     output reg Nout;
     output reg [31:0] count;
     output reg [31:0] target;
     
-    wire SOURCE_CLK = enable && clock; //& or &&
+    wire SOURCE_CLK 		= enable && clock;
+	 parameter IDLE      = 4'b1010; //10 0xA
     
     always @ (posedge SOURCE_CLK)
     begin
-        if (reset)
+        if (reset || State == IDLE )
         begin
-            Nout <= 1'b0;
+            Nout <= idle_mode;
             count <= 32'b0;
             target <= N;
         end
