@@ -78,6 +78,37 @@ int main(int argc, char *argv[])
 					setDataReg(x);
 				}
 
+				else if(strcmp(argv[2], "mode0") == 0)
+				{
+					printf("setting device 0 mode %s \n", argv[3]);
+					
+					if(strcmp(argv[3], "00") == 0)
+					{
+						clearControlReg(3 << 16);
+					}
+					
+					else if(strcmp(argv[3], "01") == 0)
+					{
+						clearControlReg(3 << 16);
+						sleep(0.2);
+						modControlReg( 1 << 16);
+					}
+
+					else if(strcmp(argv[3], "10") == 0)
+					{
+						clearControlReg(3 << 16);
+						sleep(0.2);
+						modControlReg( 2 << 16);
+					}
+
+					else if(strcmp(argv[3], "11") == 0)
+					{
+						clearControlReg(3 << 16);
+						sleep(0.2);
+						modControlReg( 3 << 16);
+					}
+				}
+
 				else if(strcmp(argv[2], "led") == 0)
 				{
 					uint32_t x = strtoull(argv[3], NULL, 16);
@@ -163,7 +194,7 @@ int main(int argc, char *argv[])
 				{
 					uint32_t x = strtoull(argv[3], NULL, 10);
 					printf("setting baud reg with %u\n", x);
-					printf("enabling control bit in ctrl reg\n");
+					printf("enabling control bit\n");
 					setBaudrateReg(x);
 					setCtrlEnableBit(1); //allows signal to be generated
 				}
@@ -266,6 +297,34 @@ int main(int argc, char *argv[])
 				}
 			}
 
+		}
+
+		else if(strcmp(argv[1], "select") == 0)
+		{
+			printf("selecting device: %s \n", argv[2]);
+			if(strcmp(argv[2], "dev0") == 0)
+			{
+				clearControlReg(3 << 13); 
+			}
+
+			if(strcmp(argv[2], "dev1") == 0)
+			{
+				clearControlReg(3 << 13); 
+				modControlReg( 1 << 13);
+			}
+
+			if(strcmp(argv[2], "dev2") == 0)
+			{
+				clearControlReg(3 << 13); 
+				modControlReg( 2 << 13);
+			}
+
+			if(strcmp(argv[2], "dev3") == 0)
+			{
+				clearControlReg(3 << 13); 
+				modControlReg( 3 << 13);
+			}
+			
 		}
 
 		else if(strcmp(argv[1], "reset") == 0)

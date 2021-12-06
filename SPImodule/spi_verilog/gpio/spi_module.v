@@ -59,9 +59,9 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
     output reg baudrate; //GPIO_0[1]   Waveform Dx
     output reg spi_tx;   //GPIO_0[7]   Waveform D0
    
-	input      spi_rx;   //GPIO_0[9] 	Waveform D1
+	 input      spi_rx;   //GPIO_0[9] 	Waveform D1
 	 
-    output wire spi_clk;  //GPIO_0[11]  Waveform D2
+    output reg spi_clk;  //GPIO_0[11]  Waveform D2
     output reg spi_cs0;  //GPIO_0[13]  Waveform D3
     output reg spi_cs1;  //GPIO_0[15]  Waveform D4
     output reg spi_cs2;  //GPIO_0[17]  Waveform D5
@@ -172,23 +172,15 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 		end
 	 end
     
-    
-	 
-	
-	//BAUD OUT CLK.
-	 reg  bard;
-	 baudratedivider baud_out(.clock(clk), .enable(control[15]), .reset(reset), .N(brd[31:0]), .Nout(bard), .State(State), .idle_mode(idle_mode));
-	
-	
+   
 	//edge detect logic
 	 wire read_pulse_clk;
 	 wire write_pulse_clk;
-	 wire neg_spi_clk;
 	 
 	 edgeDetect readBlock(.clk(clk), .reset(reset), .signal(read), .out_pulse(read_pulse_clk));
 	 edgeDetect writeBlock(.clk(clk), .reset(reset), .signal(write),.out_pulse(write_pulse_clk));
-	 negEdgeDetect negEdgeSPI(.clk(clk), .reset(reset), .signal(spi_clk), .out_pulse(neg_spi_clk));
 	
+		
 	 //Transmit FIFO
     reg [31:0] data_temp2 = 32'b11001110; //for testing purposes only
     reg [31:0] data_temp;
@@ -209,28 +201,13 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 					 .chipselect(chipselect)
 					 );
    
-	//spi serializer logic
-	
-	 wire LOAD, DECREMENT;//, READ_DONE;
-	 assign LOAD = (State == IDLE);
-	 assign DECREMENT = (State == TX_RX) && (~spi_clk); //update count on the negedge of spi_clk= baud_out
+	 //spi serializer 
 	 reg READ_DONE;
-
-	  //counter block
-	 
 	 reg [4:0] COUNT;
-	 always @(posedge spi_clk)
-	 begin
-		if(reset)
-			COUNT <= 1'b0;
-		else
-		begin 
-			if(LOAD)
-				COUNT <= control[4:0];
-			else if(DECREMENT)
-				COUNT <= COUNT- 1'b1;
-		end
-	end
+	 
+	 //BAUD OUT CLK.
+	 wire  bard;
+	 baudratedivider baud_out(.clock(clk), .enable(control[15]), .reset(reset), .N(brd[31:0]), .Nout(bard), .State(State), .idle_mode(idle_mode));
 
 	//spi serializer tx states
 	 parameter IDLE      = 4'b1010; //10 0xA
@@ -240,82 +217,39 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 	 reg [3:0] State;
 	 reg [3:0] nextState;
 	
+	 reg old_bard; //used to detect positive or negative edges
 	 always @(posedge clk)
 	 begin
-	 	if(reset || !ENABLE)
+	 	
+		if(reset)
+		begin
 			State <= IDLE;
+		end
+		
 		else
 			State <= nextState;
-	 end
-	
-	 
-	//functional block that will output cs output
-	//enable control
-	 always @(posedge clk)
-	 begin
-	 	//defaults
-	 	
+		
+		//defaults
+	 	old_bard <= bard;
+		
 		case(State)
 			IDLE:
 			begin
 				//if in idle, cs idles high, in automatic mode
-				if(CS_AUTO)
-				begin
-					if(CS0_AUTO)				
-						spi_cs0 <= 1'b1;
-					if(CS1_AUTO)
-						spi_cs1 <= 1'b1;
-					if(CS2_AUTO)
-						spi_cs2 <= 1'b1;
-					if(CS3_AUTO)
-						spi_cs3 <= 1'b1;
-					if(!TXFE)
-					begin					
-						nextState <= CS_ASSERT;
-					end
+				COUNT <= WORD_SIZE;
+				spi_clk <= idle_mode;
+				READ_DONE <= 0;
+				spi_tx <= 0;
+				
+				
+				if(CS_AUTO && !TXFE)
+				begin					
+					nextState <= CS_ASSERT;
 				end
 				
 				if(!TXFE && !(CS_AUTO)) //if CS_ENABLE, then we know its in manual mode, check which cs to pull low
 				begin	
-					if(CS0_ENABLE)
-					begin
-						spi_cs0 <= 1'b0;
-					end
-					
-					if(CS1_ENABLE)
-					begin
-						spi_cs1 <= 1'b0;
-					end
-					
-					if(CS2_ENABLE)
-					begin
-						spi_cs2 <= 1'b0;
-					end
-					
-					if(CS3_ENABLE)
-					begin
-						spi_cs3 <= 1'b0;
-					end
-						
 					nextState <= TX_RX;
-				end
-				
-				//if cs manual is reset, pull cs high
-				if(!CS0_ENABLE)
-				begin
-					spi_cs0 <= 1'b1;
-				end
-				if(!CS1_ENABLE)
-				begin
-					spi_cs1 <= 1'b1;
-				end				
-				if(!CS2_ENABLE)
-				begin
-					spi_cs2 <= 1'b1;
-				end
-				if(!CS3_ENABLE)
-				begin
-					spi_cs3 <= 1'b1;
 				end
 				
 				if(TXFE)
@@ -326,67 +260,102 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 			
 			TX_RX:
 			begin
-				//when count goes to  zero and in manual and empty go back to zero
-				if(READ_DONE)
-				begin
-					nextState <= IDLE;
-				end
-				else
-				begin
-					nextState <= TX_RX;
-				end
+				 spi_clk <= bard ^ sPolarity ^ sPhase;
+				 
+				 if(old_bard != bard) //posedge
+				 begin
+					
+					if(bard) //posedge
+					begin
+						spi_tx <= data_temp[COUNT];
+						if(COUNT == 0)
+						begin
+							spi_tx <= data_temp[0];
+							READ_DONE <= 1;
+							nextState <= IDLE;
+						end
+						
+						else
+						begin
+							nextState <= TX_RX;
+							READ_DONE <= 0;
+						end
+					end
+					
+					if(old_bard) //negedge
+					begin
+						COUNT <= COUNT-1;
+					end
+				 end
+					
 			end
 			
 			CS_ASSERT:
 			begin
-				//check which chip-selects needs to be driven low and do drive it low
-				if(CS0_AUTO)
-				begin
-					spi_cs0 <= 1'b0;
-				end
-				
-				else if(CS1_AUTO)
-				begin
-					spi_cs1 <= 1'b0;
-				end
-				
-				else if(CS2_AUTO)
-				begin
-					spi_cs2 <= 1'b0;
-				end
-					
-				else if(CS3_AUTO)
-				begin
-					spi_cs3 <= 1'b0;
-				end
-				
 				nextState <= TX_RX; //after CS_ASSERT, go to tx_rx state
 			end
 			
 		 endcase
 	 end
-
-	 //transmit logic to spi_tx pin
-	 always @(posedge spi_clk)
-	 begin
-		 //read done is always 0 unless count == 0;
-	 	 READ_DONE <= 1'b0;
-		 
-		 if(State == TX_RX)
-		 begin
-			spi_tx <= data_temp[COUNT];
-			
-			if(COUNT == 1'b0)
-			begin
-				READ_DONE <= 1'b1;
-				spi_tx <= data_temp[0]; //transmit last bit
-			end
-		 end
-		 else
-			spi_tx <= 0;
-	 end
 	 
-
+	 
+	 //chip select logic
+	 always@(*)
+	 begin
+		spi_cs0 = 0;
+		spi_cs1 = 0;
+		spi_cs2 = 0;
+		spi_cs3 = 0;
+		
+		if(CS_AUTO)
+		begin
+			if(State == IDLE)
+			begin
+				if(CS0_AUTO)
+					spi_cs0 = 1'b1;
+				if(CS1_AUTO)
+					spi_cs1 = 1'b1;
+				if(CS2_AUTO)
+					spi_cs2 = 1'b1;
+				if(CS3_AUTO)
+					spi_cs3 = 1'b1;
+			end
+			
+			else if(State == CS_ASSERT)
+			begin 
+				if(CS0_AUTO)
+					spi_cs0 = 1'b0;
+				else if(CS1_AUTO)
+					spi_cs1 = 1'b0;
+				else if(CS2_AUTO)
+					spi_cs2 = 1'b0;
+				else if(CS3_AUTO)
+					spi_cs3 = 1'b0;
+			end
+		end
+		
+		if(CS_ENABLE)
+		begin
+			if(State == TX_RX)
+			begin
+				if(CS0_ENABLE)
+					spi_cs0 = 1'b0;
+				if(CS1_ENABLE)
+					spi_cs1 = 1'b0;
+				if(CS2_ENABLE)
+					spi_cs2 = 1'b0;
+				if(CS3_ENABLE)
+					spi_cs3 = 1'b0;
+			end
+			else
+			begin
+				spi_cs0 = CS0_ENABLE;
+				spi_cs1 = CS1_ENABLE;
+				spi_cs2 = CS2_ENABLE;
+				spi_cs3 = CS3_ENABLE;
+			end
+		end
+	 end
 	 
 	 //modes, phase & polarity for each device
 	 parameter DEV0 = 2'b00;
@@ -394,8 +363,8 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 	 parameter DEV2 = 2'b10;
 	 parameter DEV3 = 2'b11;
 	 
-	 reg sPhase = 0;
-	 reg sPolarity = 0;
+	 reg sPhase;
+	 reg sPolarity;
 	 
 	 always @(*)
 	 begin
@@ -429,7 +398,6 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 	 //control idle high or idle low
 	 wire idle_mode;
 	 assign idle_mode = (sPolarity == 1'b1); //checks if idle high, or low
-	 assign spi_clk = (bard);
 	 
 	 //hex out for read ptr and write ptr and status bits for debugging
 	 binary2seven hex0(.BIN(readptr), .SEV(HEX1)); //read ptr

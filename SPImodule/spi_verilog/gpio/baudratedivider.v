@@ -14,9 +14,9 @@ module baudratedivider (enable, clock, reset, N, Nout, count, target, State, idl
     
     always @ (posedge SOURCE_CLK)
     begin
-        if (reset || State == IDLE )
+        if (reset)
         begin
-            Nout <= idle_mode;
+            Nout <= 0;
             count <= 32'b0;
             target <= N;
         end
