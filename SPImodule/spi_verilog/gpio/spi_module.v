@@ -302,10 +302,10 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 	 //chip select logic
 	 always@(*)
 	 begin
-		spi_cs0 = 0;
-		spi_cs1 = 0;
-		spi_cs2 = 0;
-		spi_cs3 = 0;
+		spi_cs0 = 1;
+		spi_cs1 = 1;
+		spi_cs2 = 1;
+		spi_cs3 = 1;
 		
 		if(CS_AUTO)
 		begin
@@ -321,7 +321,7 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 					spi_cs3 = 1'b1;
 			end
 			
-			else if(State == CS_ASSERT)
+			else if(State == CS_ASSERT || State == TX_RX)
 			begin 
 				if(CS0_AUTO)
 					spi_cs0 = 1'b0;
@@ -336,25 +336,15 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 		
 		if(CS_ENABLE)
 		begin
-			if(State == TX_RX)
-			begin
-				if(CS0_ENABLE)
-					spi_cs0 = 1'b0;
-				if(CS1_ENABLE)
-					spi_cs1 = 1'b0;
-				if(CS2_ENABLE)
-					spi_cs2 = 1'b0;
-				if(CS3_ENABLE)
-					spi_cs3 = 1'b0;
+			if(CS0_ENABLE)
+				spi_cs0 = !CS0_ENABLE;
+			if(CS1_ENABLE)
+				spi_cs1 = !CS1_ENABLE;
+			if(CS2_ENABLE)
+				spi_cs2 = !CS2_ENABLE;
+			if(CS3_ENABLE)
+				spi_cs3 = !CS3_ENABLE;
 			end
-			else
-			begin
-				spi_cs0 = CS0_ENABLE;
-				spi_cs1 = CS1_ENABLE;
-				spi_cs2 = CS2_ENABLE;
-				spi_cs3 = CS3_ENABLE;
-			end
-		end
 	 end
 	 
 	 //modes, phase & polarity for each device
