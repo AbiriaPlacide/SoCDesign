@@ -37,22 +37,15 @@ begin
 		end
 	else
 		begin //beginning of state machine				
-			if( ((Read) && (!EMPTY) ))//(address == 2'b00) && chipselect == 1'b1) ) //!READ because KEY2 is active-low| on a read and not empty
+			if( ((Read) && (!EMPTY) ))//(address == 2'b00) && chipselect == 1'b1) )
 				begin 
 					if(!OV)
 						begin
-							//DataOut <= STACK[ReadPtr];//[x]
 							ReadPtr <= ReadPtr + 1'b1;
 							FIFO_Counter <= FIFO_Counter - 1'b1; //subtract 1 count on each read
 						end
-//					else //we should still be able to read even if the overflow bit is set
-//						begin
-//							DataOut <= STACK[ReadPtr];
-//							ReadPtr <= ReadPtr + 1'b1;		
-//							FIFO_Counter <= FIFO_Counter - 1'b1; //subtract 2 count on read when in overflow since counter  == 17
-//						end
 				end
-			 else if( (Write && !Overflow && (address == 2'b00) && chipselect == 1'b1)) //what to do on a write. !Write because active-low
+			 else if((Write && !Overflow) ) //what to do on a write
 				 begin
 					if(!Full)
 						begin
@@ -68,13 +61,12 @@ begin
 				 end 
 			else
 			begin
-				//DataOut <= STACK[ReadPtr];//[x]
 				Overflow <= 0;
 			end
 		end //end of else
 end //end of block
 
-//always have data on coming out of FIFO.
+//always have data on coming out of FIFO or its gonna latch zeros. 
 always @(posedge Clock)
 begin
 	if(Reset)
@@ -102,8 +94,6 @@ begin
 	end
 
 end
-
- 
 
 endmodule
 

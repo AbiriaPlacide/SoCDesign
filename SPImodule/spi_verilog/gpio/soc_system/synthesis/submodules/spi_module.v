@@ -91,7 +91,7 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
         begin
             case(address)
                 DATA_REG:
-                    readdata = data_temp;
+                    readdata = data_received;
                 STATUS_REG:
                     readdata = status;
                 CTRL_REG:
@@ -182,21 +182,44 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 	
 		
 	 //Transmit FIFO
-    reg [31:0] data_temp2 = 32'b11001110; //for testing purposes only
-    reg [31:0] data_temp;
+    reg [31:0] data_temp2 = 32'b11001110; //for testing purposes
+    reg [31:0] data_tx;
+
     FIFO txFIFO(.Clock(clk), 
 					 .Full(TXFF), 
 					 .EMPTY(TXFE), 
 					 .OV(TXFO), 
 					 .READ_DONE(READ_DONE), 
-					 .Read(READ_DONE), 
-					 .Write(write_pulse_clk), 
+					 .Read(READ_DONE), //update read counter 
+					 .Write(write_pulse_clk && (chipselect == 1'b1) && address == 2'b00 ), 
 					 .DataIn(writedata), 
-					 .DataOut(data_temp), 
+					 .DataOut(data_tx), 
 					 .Reset(reset), 
 					 .ClearOV(clear_overflow), 
 					 .ReadPtr(readptr), 
 					 .WritePtr(writeptr), 
+					 .address(address), 
+					 .chipselect(chipselect)
+					 );
+	    
+		 reg [31:0] data_received;
+		 reg [31:0] data_rx;
+		 reg [3:0] Rx_readptr;
+		 reg [3:0] Rx_writeprt;
+		 
+	    FIFO RxFIFO(.Clock(clk), 
+					 .Full(RXFF), 
+					 .EMPTY(RXFE), 
+					 .OV(RXFO), 
+					 .READ_DONE(READ_DONE), 
+					 .Read(read_pulse_clk && (chipselect == 1'b1 && address == 2'b00)), //update read cocunter
+					 .Write(READ_DONE), // on read_done, transmitter is done transmitting
+					 .DataIn(data_rx),  // 
+					 .DataOut(data_received),
+					 .Reset(reset), 
+					 .ClearOV(clear_overflow), 
+					 .ReadPtr(Rx_readptr), 
+					 .WritePtr(Rx_writeprt), 
 					 .address(address), 
 					 .chipselect(chipselect)
 					 );
@@ -207,7 +230,14 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 	 
 	 //BAUD OUT CLK.
 	 wire  bard;
-	 baudratedivider baud_out(.clock(clk), .enable(control[15]), .reset(reset), .N(brd[31:0]), .Nout(bard), .State(State), .idle_mode(idle_mode));
+	 baudratedivider baud_out(.clock(clk), 
+									  .enable(control[15]), 
+									  .reset(reset), 
+									  .N(brd[31:0]), 
+									  .Nout(bard), 
+									  .State(State), 
+									  .idle_mode(idle_mode)
+									  );
 
 	//spi serializer tx states
 	 parameter IDLE      = 4'b1010; //10 0xA
@@ -229,7 +259,7 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 		else
 			State <= nextState;
 		
-		//defaults
+		//detect posedge or negedge of baudrate
 	 	old_bard <= bard;
 		
 		case(State)
@@ -260,17 +290,20 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 			
 			TX_RX:
 			begin
+				 
 				 spi_clk <= bard ^ sPolarity ^ sPhase;
 				 
 				 if(old_bard != bard) //posedge
 				 begin
-					
 					if(bard) //posedge
 					begin
-						spi_tx <= data_temp[COUNT];
+						spi_tx <= data_tx[COUNT]; //send to transmit pins
+						data_rx[COUNT] <= spi_rx; //receive data pins
+						
 						if(COUNT == 0)
 						begin
-							spi_tx <= data_temp[0];
+							spi_tx <= data_tx[0];
+							data_rx[0] <= spi_rx;
 							READ_DONE <= 1;
 							nextState <= IDLE;
 						end
@@ -298,9 +331,8 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 		 endcase
 	 end
 	 
-	 
 	 //chip select logic
-	 always@(*)
+	 always@(posedge clk)
 	 begin
 		spi_cs0 = 1;
 		spi_cs1 = 1;
@@ -356,6 +388,7 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 	 reg sPhase;
 	 reg sPolarity;
 	 
+	 
 	 always @(*)
 	 begin
 		case(CS_SELECT)
@@ -393,7 +426,7 @@ module spi_module(clk, reset, read, write, chipselect, address, writedata,readda
 	 binary2seven hex0(.BIN(readptr), .SEV(HEX1)); //read ptr
 	 binary2seven hex1(.BIN(writeptr),.SEV(HEX0)); //write ptr
 	 binary2seven hex2 (.BIN({TXFF,TXFO,TXFE}), .SEV(HEX2) ); //
-	 binary2seven hex3(.BIN(data_temp[3:0]),.SEV(HEX3));
+	 binary2seven hex3(.BIN(data_tx[3:0]),.SEV(HEX3));
 	 binary2seven hex4(.BIN(State[3:0]), .SEV(HEX4));
 	 
 endmodule

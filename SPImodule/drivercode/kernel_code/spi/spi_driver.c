@@ -43,13 +43,6 @@ static unsigned int *base = NULL;
 
 
 /*
-uint32_t getDataReg()
-{
-    uint32_t value = *(base+OFS_DATA);
-    return value;
-}
-
-
 uint32_t getStatusReg()
 {
     uint32_t value = *(base+OFS_STATUS);
@@ -148,6 +141,12 @@ void setCtrlEnableBit(bool bit)
 
 */ 
 
+
+uint32_t getDataReg(void)
+{
+    uint32_t value = ioread32(base+OFS_DATA);
+    return value;
+}
 
 
 uint32_t getControlReg(void)
@@ -251,8 +250,8 @@ static ssize_t showWordSize(struct kobject *kobj, struct kobj_attribute *attr, c
 {
 	word_size = getControlReg();
 	word_size &= 0x1F; 
+	word_size++;
 	return sprintf(buffer, "%u\n", word_size);
-	
 } 
 
 static ssize_t storeWordSize(struct kobject *kobj, struct kobj_attribute *attr, const char *buffer, size_t count)
@@ -333,8 +332,9 @@ MODULE_PARM_DESC(rx_data, "set rx_data");
 static ssize_t storeRxData(struct kobject *kobj, struct kobj_attribute *attr, const char *buffer, size_t count)
 {
 	int result = kstrtouint(buffer, 0, &rx_data);
-	if(result == 0); //do nothing
-	return count;
+	if(result == 0);
+
+	return count;	
 }
 
 static ssize_t showRxData(struct kobject *kobj, struct kobj_attribute *attr, char *buffer)
@@ -346,7 +346,8 @@ static ssize_t showRxData(struct kobject *kobj, struct kobj_attribute *attr, cha
 	}
 	else
 	{
-		return sprintf(buffer, "%s\n", "Not EMPTY"); //[x]
+		uint32_t data = getDataReg();
+		return sprintf(buffer, "%u\n", data);
 	}
 }
 //RxData attribute
@@ -873,7 +874,6 @@ static int __init initialize_module(void)
 	result = sysfs_create_file(kobj, &TxDataAttr.attr); //Txdata
 	result = sysfs_create_file(kobj, &RxDataAttr.attr); //Rxdata
 	
-	//add grouped sysfs files
 
 	base = (unsigned int*)ioremap_nocache(LW_BRIDGE_BASE + SPI_BASE_OFFSET, SPAN_IN_BYTES);
 

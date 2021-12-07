@@ -132,37 +132,37 @@ int main(int argc, char *argv[])
 					{
 						setDataReg(0x00400000); //address
 						sleep(0.2);
-						setDataReg(0x00400903); //led 1 
+						setDataReg(0x00400904); //led 2 
 					}
 					else if(x == 3)
 					{
 						setDataReg(0x00400000); //address
 						sleep(0.2);
-						setDataReg(0x00400904); //led 1 
+						setDataReg(0x00400908); //led 3 
 					}
 					else if(x == 4)
 					{
 						setDataReg(0x00400000); //address
 						sleep(0.2);
-						setDataReg(0x00400905); //led 1 
+						setDataReg(0x00400910); //led 4 
 					}
 					else if(x == 5)
 					{
 						setDataReg(0x00400000); //address
 						sleep(0.2);
-						setDataReg(0x00400906); //led 1 
+						setDataReg(0x00400920); //led 5 
 					}
 					else if(x == 6)
 					{
 						setDataReg(0x00400000); //address
 						sleep(0.2);
-						setDataReg(0x00400907); //led 1 
+						setDataReg(0x00400940); //led 6 
 					}
 					else if(x == 7)
 					{
 						setDataReg(0x00400000); //address
 						sleep(0.2);
-						setDataReg(0x00400908); //led 1 
+						setDataReg(0x00400980); //led 7 
 					}
 
 					else if(x == 8)
