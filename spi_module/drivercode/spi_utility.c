@@ -38,7 +38,6 @@ int main(int argc, char *argv[])
 	if(argc > 1)
 	{
 		//get command
-
 		if(strcmp(argv[1], "get") == 0)
 		{
 			if( argc < 4)
@@ -106,6 +105,99 @@ int main(int argc, char *argv[])
 						clearControlReg(3 << 16);
 						sleep(0.2);
 						modControlReg( 3 << 16);
+					}
+				}
+
+				else if(strcmp(argv[2], "mode1") == 0)
+				{
+					printf("setting device 1 mode %s \n", argv[3]);
+					
+					if(strcmp(argv[3], "00") == 0)
+					{
+						clearControlReg(3 << 18);
+					}
+					
+					else if(strcmp(argv[3], "01") == 0)
+					{
+						clearControlReg(3 << 18);
+						sleep(0.2);
+						modControlReg( 1 << 18);
+					}
+
+					else if(strcmp(argv[3], "10") == 0)
+					{
+						clearControlReg(3 << 18);
+						sleep(0.2);
+						modControlReg( 2 << 18);
+					}
+
+					else if(strcmp(argv[3], "11") == 0)
+					{
+						clearControlReg(3 << 18);
+						sleep(0.2);
+						modControlReg( 3 << 18);
+					}
+				}
+
+				else if(strcmp(argv[2], "mode2") == 0)
+				{
+					printf("setting device 2 mode %s \n", argv[3]);
+					
+					if(strcmp(argv[3], "00") == 0)
+					{
+						clearControlReg(3 << 20);
+					}
+					
+					else if(strcmp(argv[3], "01") == 0)
+					{
+						clearControlReg(3 << 20);
+						sleep(0.2);
+						modControlReg( 1 << 20);
+					}
+
+					else if(strcmp(argv[3], "10") == 0)
+					{
+						clearControlReg(3 << 20);
+						sleep(0.2);
+						modControlReg( 2 << 20);
+					}
+
+					else if(strcmp(argv[3], "11") == 0)
+					{
+						clearControlReg(3 << 20);
+						sleep(0.2);
+						modControlReg( 3 << 20);
+					}
+				}
+
+				else if(strcmp(argv[2], "mode3") == 0)
+				{
+					printf("setting device 3 mode %s \n", argv[3]);
+					
+					if(strcmp(argv[3], "00") == 0)
+					{
+						clearControlReg(3 << 22);
+					}
+					
+					else if(strcmp(argv[3], "01") == 0)
+					{
+						clearControlReg(3 << 22);
+						sleep(0.2);
+						modControlReg( 1 << 22);
+					}
+
+					else if(strcmp(argv[3], "10") == 0)
+					{
+						clearControlReg(3 << 22);
+						sleep(0.2);
+						modControlReg( 2 << 22);
+					}
+
+					else if(strcmp(argv[3], "11") == 0)
+					{
+						clearControlReg(3 << 22);
+						sleep(0.2);
+						modControlReg( 3 << 22);
 					}
 				}
 
